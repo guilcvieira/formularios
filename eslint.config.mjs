@@ -11,6 +11,26 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+
+  {
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+      },
+    },
+    rules: {
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-expressions": "warn",
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
+      "@next/next/no-html-link-for-pages": [
+        "warn",
+        "./app/(dashboard)/page.tsx",
+      ],
+    },
+  },
 ];
 
 export default eslintConfig;
