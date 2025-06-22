@@ -117,7 +117,28 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .space-y-with-divide-4> :not(:last-child) {
+    --tw-space-y-reverse: 0;
+    --tw-divide-y-reverse: 0;
+
+    /* Espaçamento vertical dividido igualmente: metade margin, metade padding */
+    margin-block-start: calc(0.5rem * var(--tw-space-y-reverse));
+    margin-block-end: calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));
+
+    padding-block-start: calc(0.5rem * var(--tw-space-y-reverse));
+    padding-block-end: calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));
+
+    /* Divide-y (estilo de borda) */
+    border-top-style: solid;
+    border-bottom-style: solid;
+    border-top-width: calc(1px * var(--tw-divide-y-reverse));
+    border-bottom-width: calc(1px * calc(1 - var(--tw-divide-y-reverse)));
   }
 }
