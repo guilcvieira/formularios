@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   Dialog,
@@ -8,17 +8,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 
-import { BsFileEarmarkPlus } from "react-icons/bs";
-import { ImSpinner2 } from "react-icons/im";
-import { Button } from "./ui/button";
+import { BsFileEarmarkPlus } from 'react-icons/bs';
+import { ImSpinner2 } from 'react-icons/im';
+import { Button } from './ui/button';
 
-import { CreateForm } from "@actions/form";
-import { formSchema, FormSchema } from "@/schemas/form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
+import { CreateForm } from '@actions/form';
+import { formSchema, FormSchema } from '@/schemas/form.schema';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 import {
   Form,
   FormControl,
@@ -26,10 +26,10 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "./ui/form";
-import { Input } from "./ui/input";
-import { Textarea } from "./ui/textarea";
-import { useRouter } from "next/navigation";
+} from './ui/form';
+import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
+import { useRouter } from 'next/navigation';
 
 function CreateFormBtn() {
   const router = useRouter();
@@ -40,18 +40,18 @@ function CreateFormBtn() {
   const onSubmit = async (data: FormSchema) => {
     try {
       const formId = await CreateForm(data);
-      toast.success("Form created successfully!", {
+      toast.success('Form created successfully!', {
         description: `Your form has been created and is ready to use. ID: ${formId}`,
       });
       form.reset();
 
       router.push(`/builder/${formId}`);
     } catch (error) {
-      toast.error("Failed to create form. Please try again.", {
+      toast.error('Failed to create form. Please try again.', {
         description:
           error instanceof Error
             ? error.message
-            : "An unexpected error occurred.",
+            : 'An unexpected error occurred.',
       });
       toast;
     }
@@ -61,11 +61,11 @@ function CreateFormBtn() {
     <Dialog>
       <DialogTrigger asChild>
         <Button
-          variant={"outline"}
-          className="group border border-dashed h-[190px] items-center justify-center flex flex-col hover:cursor-pointer "
+          variant={'outline'}
+          className="group flex h-[190px] flex-col items-center justify-center border border-dashed hover:cursor-pointer"
         >
-          <BsFileEarmarkPlus className="h-8 w-8 text-muted-foreground group-hover:text-primary" />
-          <p className="text-xl text-muted-foreground group-hover:text-primary/80">
+          <BsFileEarmarkPlus className="text-muted-foreground group-hover:text-primary h-8 w-8" />
+          <p className="text-muted-foreground group-hover:text-primary/80 text-xl">
             Create new Form
           </p>
         </Button>

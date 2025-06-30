@@ -1,7 +1,7 @@
 'use server';
 
 import prisma from '@/lib/prisma';
-import { formSchema, FormSchema } from '@/schemas/form';
+import { formSchema, FormSchema } from '@/schemas/form.schema';
 import { currentUser } from '@clerk/nextjs/server';
 
 class UserNotFoundErr extends Error {}
@@ -125,6 +125,30 @@ export async function UpdateFormContent(id: number, jsonContent: string) {
 
   if (!form) {
     throw new Error('Failed to update form content');
+  }
+
+  return form;
+}
+
+export async function PublishForm(id: number) {
+  const user = await currentUser();
+
+  if (!user) {
+    throw new UserNotFoundErr();
+  }
+
+  const form = await prisma.form.update({
+    where: {
+      id,
+      userId: user.id,
+    },
+    data: {
+      published: true,
+    },
+  });
+
+  if (!form) {
+    throw new Error('Failed to publish form');
   }
 
   return form;

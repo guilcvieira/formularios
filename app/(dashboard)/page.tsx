@@ -1,7 +1,7 @@
-import { GetForms, GetFormStats } from "@actions/form";
-import CreateFormBtn from "@/components/CreateFormBtn";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { GetForms, GetFormStats } from '@actions/form';
+import CreateFormBtn from '@/components/CreateFormBtn';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -9,19 +9,19 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Form } from "@/lib/generated/prisma";
-import { formatDistance } from "date-fns";
-import Link from "next/link";
-import { Suspense } from "react";
+} from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Form } from '@/lib/generated/prisma';
+import { formatDistance } from 'date-fns';
+import Link from 'next/link';
+import { Suspense } from 'react';
 
-import { BiRightArrowAlt } from "react-icons/bi";
-import { FaEdit, FaWpforms } from "react-icons/fa";
-import { HiCursorClick } from "react-icons/hi";
-import { LuView } from "react-icons/lu";
-import { TbArrowBounce } from "react-icons/tb";
+import { BiRightArrowAlt } from 'react-icons/bi';
+import { FaEdit, FaWpforms } from 'react-icons/fa';
+import { HiCursorClick } from 'react-icons/hi';
+import { LuView } from 'react-icons/lu';
+import { TbArrowBounce } from 'react-icons/tb';
 
 export default function Home() {
   return (
@@ -32,7 +32,7 @@ export default function Home() {
       <Separator className="my-4" />
       <div className="text-2xl font-bold">Your Forms</div>
       <Separator className="my-4" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <CreateFormBtn />
         <Suspense
           fallback={[1, 2, 3, 4, 5, 6, 7].map((i) => (
@@ -58,14 +58,14 @@ interface StatsCardsProps {
 
 function StatsCards({ data, loading }: StatsCardsProps) {
   return (
-    <div className="w-full pt-8 gap-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="grid w-full grid-cols-1 gap-4 pt-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <StatsCard
         title="Total Visits"
         icon={<LuView className="text-blue-600" />}
         helperText="All time form visits"
         value={data?.visits?.toLocaleString()}
         loading={loading}
-        className="shadow shadow-blue-600 gap-4"
+        className="gap-4 shadow shadow-blue-600"
       />
 
       <StatsCard
@@ -74,25 +74,25 @@ function StatsCards({ data, loading }: StatsCardsProps) {
         helperText="All time form submissions"
         value={data?.submissions?.toLocaleString()}
         loading={loading}
-        className="shadow shadow-yellow-600 gap-4"
+        className="gap-4 shadow shadow-yellow-600"
       />
 
       <StatsCard
         title="Submission rate"
         icon={<HiCursorClick className="text-green-600" />}
         helperText="Visistes that resulted in a submission"
-        value={data?.submissionRate?.toLocaleString() + "%" || ""}
+        value={data?.submissionRate?.toLocaleString() + '%' || ''}
         loading={loading}
-        className="shadow shadow-green-600 gap-4"
+        className="gap-4 shadow shadow-green-600"
       />
 
       <StatsCard
         title="Bounce rate"
         icon={<TbArrowBounce className="text-red-600" />}
         helperText="Visistes that leave without interaction"
-        value={data?.bounceRate?.toLocaleString() + "%" || ""}
+        value={data?.bounceRate?.toLocaleString() + '%' || ''}
         loading={loading}
-        className="shadow shadow-red-600 gap-4"
+        className="gap-4 shadow shadow-red-600"
       />
     </div>
   );
@@ -107,18 +107,18 @@ interface StatsCardProps {
   className?: string;
 }
 
-function StatsCard({
+export function StatsCard({
   title,
   icon,
   helperText,
-  value = "0",
+  value = '0',
   loading,
   className,
 }: StatsCardProps) {
   return (
     <Card className={className}>
       <CardHeader className="flex items-center justify-between">
-        <CardTitle className="text-base font-medium text-muted-foreground">
+        <CardTitle className="text-muted-foreground text-base font-medium">
           {title}
         </CardTitle>
         {icon}
@@ -133,7 +133,7 @@ function StatsCard({
 
           {!loading && value}
         </div>
-        <p className="text-xs text-muted-foreground pt-1">{helperText}</p>
+        <p className="text-muted-foreground pt-1 text-xs">{helperText}</p>
       </CardContent>
     </Card>
   );
@@ -141,7 +141,7 @@ function StatsCard({
 
 function FormCardSkeleton() {
   return (
-    <Skeleton className="border-2 border-border/20 h-[190px] w-full rounded-md" />
+    <Skeleton className="border-border/20 h-[190px] w-full rounded-md border-2" />
   );
 }
 
@@ -158,14 +158,14 @@ async function FormCards() {
 
 function FormCard({ form }: { form: Form }) {
   return (
-    <Card className="flex flex-col gap-4 justify-between border-2 border-border/30 h-[190px] w-full rounded-md shadow-none py-4">
+    <Card className="border-border/30 flex h-[190px] w-full flex-col justify-between gap-4 rounded-md border-2 py-4 shadow-none">
       <CardHeader>
-        <CardTitle className="flex justify-between items-center gap-2">
+        <CardTitle className="flex items-center justify-between gap-2">
           <span className="truncate font-bold">{form.name}</span>
           {form.published && <Badge>Published</Badge>}
           {!form.published && <Badge variant="destructive">Draft</Badge>}
         </CardTitle>
-        <CardDescription className="flex items-center justify-between text-sm text-muted-foreground">
+        <CardDescription className="text-muted-foreground flex items-center justify-between text-sm">
           <span className="truncate">
             {formatDistance(form.createdAt, new Date(), {
               addSuffix: true,
@@ -174,19 +174,19 @@ function FormCard({ form }: { form: Form }) {
           {!form.published && (
             <span className="flex items-center gap-2">
               <LuView className="text-blue-600" />
-              {form.visits?.toLocaleString() || "0"}
+              {form.visits?.toLocaleString() || '0'}
               <FaWpforms className="text-yellow-600" />
-              {form.submissions?.toLocaleString() || "0"}
+              {form.submissions?.toLocaleString() || '0'}
             </span>
           )}
         </CardDescription>
       </CardHeader>
-      <CardContent className="h-[20px] truncate text-sm text-muted-foreground">
-        {form.description || "No description provided"}
+      <CardContent className="text-muted-foreground h-[20px] truncate text-sm">
+        {form.description || 'No description provided'}
       </CardContent>
       <CardFooter>
         {form.published && (
-          <Button asChild className="w-full mt-2 text-base gap-4">
+          <Button asChild className="mt-2 w-full gap-4 text-base">
             <Link href={`/forms/${form.id}`}>
               View submissions
               <BiRightArrowAlt />
@@ -197,8 +197,8 @@ function FormCard({ form }: { form: Form }) {
         {!form.published && (
           <Button
             asChild
-            variant={"secondary"}
-            className="w-full mt-2 text-base gap-4"
+            variant={'secondary'}
+            className="mt-2 w-full gap-4 text-base"
           >
             <Link href={`/builder/${form.id}`}>
               Edit Form
