@@ -31,12 +31,14 @@ Um construtor de formulários drag-and-drop intuitivo e moderno, desenvolvido co
 ## 🏗️ Instalação e Setup
 
 1. **Clone o repositório**:
+
    ```bash
    git clone <url-do-repo>
    cd form-builder
    ```
 
 2. **Instale dependências**:
+
    ```bash
    npm install
    # ou
@@ -46,6 +48,7 @@ Um construtor de formulários drag-and-drop intuitivo e moderno, desenvolvido co
    ```
 
 3. **Configure o Banco de Dados**:
+
    - Crie um banco PostgreSQL.
    - Copie `.env.example` para `.env.local` e configure:
      ```env
@@ -53,12 +56,14 @@ Um construtor de formulários drag-and-drop intuitivo e moderno, desenvolvido co
      ```
 
 4. **Configure o Prisma**:
+
    ```bash
    npx prisma generate
    npx prisma db push
    ```
 
 5. **Configure o Clerk**:
+
    - Crie um app no Clerk e obtenha as chaves.
    - Adicione ao `.env.local`:
      ```env
@@ -77,6 +82,7 @@ Um construtor de formulários drag-and-drop intuitivo e moderno, desenvolvido co
 ## 📖 Como Usar
 
 ### Criando um Formulário
+
 1. Faça login/signup.
 2. No dashboard, clique em "Criar Formulário".
 3. Use o designer: Arraste elementos da barra lateral esquerda para o canvas.
@@ -84,10 +90,12 @@ Um construtor de formulários drag-and-drop intuitivo e moderno, desenvolvido co
 5. Salve e publique o formulário.
 
 ### Publicando e Compartilhando
+
 - Clique em "Publicar" para gerar um link único (e.g., `/submit/uuid`).
 - Compartilhe o link; visitantes podem preencher e submeter.
 
 ### Visualizando Análises
+
 - No dashboard, veja métricas totais (visitas, submissões, taxas).
 - Em cada formulário, acesse detalhes e submissões individuais.
 
@@ -122,6 +130,7 @@ form-builder/
 5. Abra um Pull Request.
 
 ### Adicionando Novos Elementos
+
 - Edite `src/components/FormElements.tsx` para registrar novos tipos.
 - Crie componentes em `src/components/fields/` seguindo a interface `FormElement`.
 
