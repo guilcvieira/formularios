@@ -1,11 +1,16 @@
 import { MdTextFields } from 'react-icons/md';
-import { ElementType, FormElement, FormElementInstance } from '../FormElements';
+import {
+  ElementType,
+  FormElement,
+  FormElementInstance,
+  SubmitFunction,
+} from '../FormElements';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import useDesigner from '../hooks/useDesigner';
 
 import {
@@ -18,6 +23,7 @@ import {
   FormMessage,
 } from '../ui/form';
 import { Switch } from '../ui/switch';
+import { cn } from '@/lib/utils';
 
 const type: ElementType = 'TextField';
 
@@ -50,8 +56,27 @@ export const TextFieldFormElement: FormElement = {
     icon: MdTextFields,
   },
   designerComponent: DesignerComponent,
-  formComponent: () => <div>form component</div>,
+  formComponent: FormComponent,
   propertiesComponent: PropertiesComponent,
+
+  validateFormElement(
+    formElement: FormElementInstance,
+    currentValue: string,
+  ): boolean {
+    const element = formElement as CustomInstance;
+    if (element.extraAttributes.required) {
+      console.log(
+        'Validating required field:',
+        element.extraAttributes.label,
+        'Value:',
+        currentValue,
+        'Valid:',
+        !!(currentValue && currentValue.trim().length > 0),
+      );
+      return !!(currentValue && currentValue.trim().length > 0);
+    }
+    return true;
+  },
 };
 
 type CustomInstance = FormElementInstance & {
@@ -202,5 +227,66 @@ function PropertiesComponent({ element }: { element: FormElementInstance }) {
         />
       </form>
     </Form>
+  );
+}
+
+function FormComponent({
+  element,
+  submitValue,
+  isInvalid,
+  defaultValue,
+}: {
+  element: FormElementInstance;
+  submitValue?: SubmitFunction;
+  isInvalid?: boolean;
+  defaultValue?: string;
+}) {
+  const customElement = element as CustomInstance;
+
+  const [value, setValue] = useState(defaultValue || '');
+  const [error, setError] = useState<boolean>(false);
+
+  useEffect(() => {
+    setError(isInvalid === true);
+  }, [isInvalid]);
+
+  return (
+    <div className="flex w-full flex-col gap-2">
+      <Label className={cn(error && 'text-destructive')}>
+        {customElement.extraAttributes.label}
+        {customElement.extraAttributes.required && <span>*</span>}
+      </Label>
+      <Input
+        className={cn(error && 'border-destructive')}
+        placeholder={customElement.extraAttributes.placeholder}
+        value={value}
+        onChange={(e) => {
+          setValue(e.target.value);
+          if (submitValue) {
+            submitValue(element.id, e.target.value);
+          }
+        }}
+        onBlur={(e) => {
+          if (submitValue) {
+            const validate = TextFieldFormElement.validateFormElement(
+              element,
+              e.target.value,
+            );
+            setError(!validate);
+            submitValue(element.id, e.target.value);
+          }
+        }}
+      />
+      {customElement.extraAttributes.helperText && (
+        <p
+          className={cn(
+            'text-muted-foreground text-xs',
+            error && 'text-destructive',
+          )}
+        >
+          {customElement.extraAttributes.helperText}
+        </p>
+      )}
+    </div>
   );
 }

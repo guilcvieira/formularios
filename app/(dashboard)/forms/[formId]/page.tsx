@@ -1,11 +1,21 @@
 import FormLinkShare from '@/components/FormLinkShare';
 import VisitBtn from '@/components/VisitBtn';
-import { GetFormById } from '@actions/form';
+import { GetFormById, GetFormWithSubissions } from '@actions/form';
 import { StatsCard } from '../../page';
 import { LuView } from 'react-icons/lu';
 import { FaWpforms } from 'react-icons/fa';
 import { HiCursorClick } from 'react-icons/hi';
 import { TbArrowBounce } from 'react-icons/tb';
+import { ElementType, FormElementInstance } from '@/components/FormElements';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { formatDistance } from 'date-fns';
 
 async function FormDetailPage({ params }: { params: { formId: string } }) {
   const { formId } = await params;
@@ -25,7 +35,7 @@ async function FormDetailPage({ params }: { params: { formId: string } }) {
   const bounceRate = 100 - submissionRate;
 
   return (
-    <>
+    <div className="flex w-full flex-col gap-4">
       <div className="border-muted w-full border-y py-10">
         <div className="container mx-auto flex w-full justify-between self-center">
           <h1 className="truncate text-4xl font-bold">{form.name}</h1>
@@ -79,16 +89,110 @@ async function FormDetailPage({ params }: { params: { formId: string } }) {
       <div className="container mx-auto w-full pt-10">
         <SubmissionsTable formId={formId} />
       </div>
-    </>
+    </div>
   );
 }
 
 export default FormDetailPage;
 
-function SubmissionsTable({ formId }: { formId: string }) {
+type Row = {
+  [key: string]: string | number | boolean;
+} & {
+  submittedAt: Date;
+};
+
+async function SubmissionsTable({ formId }: { formId: string }) {
+  const form = await GetFormWithSubissions(Number(formId));
+
+  if (!form) {
+    return <p>No submissions found for this form.</p>;
+  }
+
+  const formElements = JSON.parse(form.content) as FormElementInstance[];
+
+  const columns: {
+    id: string;
+    label: string;
+    required: boolean;
+    type: ElementType;
+  }[] = [];
+
+  formElements.forEach((element) => {
+    switch (element.type) {
+      case 'TextField':
+        columns.push({
+          id: element.id,
+          label: element.extraAttributes?.label,
+          required: element.extraAttributes?.required,
+          type: element.type,
+        });
+        break;
+      default:
+        break;
+    }
+  });
+
+  const rows: Row[] = [];
+  form.FormSubmission.forEach((submission) => {
+    const content = JSON.parse(submission.content);
+    rows.push({
+      ...content,
+      submittedAt: submission.createdAt,
+    });
+  });
+
   return (
     <>
-      <h1>Submissions for Form ID: {formId}</h1>
+      <h1>Submissions</h1>
+
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {columns.map((column) => (
+                <TableHead
+                  key={column.id}
+                  className="text-muted-foreground uppercase"
+                >
+                  {column.label}
+                </TableHead>
+              ))}
+              <TableHead className="text-muted-foreground text-right uppercase">
+                Submitted At
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.map((row, index) => (
+              <TableRow key={index}>
+                {columns.map((column) => (
+                  <RowCell
+                    key={column.id}
+                    type={column.type}
+                    value={row[column.id]}
+                  />
+                ))}
+                <TableCell className="text-muted-foreground text-right">
+                  {formatDistance(row.submittedAt, new Date(), {
+                    addSuffix: true,
+                  })}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </>
   );
+}
+
+function RowCell({
+  type,
+  value,
+}: {
+  type: ElementType;
+  value: string | number | boolean;
+}) {
+  let node: React.ReactNode = value;
+  return <TableCell>{node}</TableCell>;
 }
