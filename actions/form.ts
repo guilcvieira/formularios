@@ -111,19 +111,34 @@ export async function GetFormContentByURL(formUrl: string) {
     throw new Error('Form URL is required');
   }
 
-  return await prisma.form.update({
+  const form = await prisma.form.findFirst({
+    where: {
+      shareUrl: formUrl,
+    },
     select: {
+      id: true,
       content: true,
     },
+  });
+
+  if (!form) {
+    throw new Error('Form not found');
+  }
+
+  await prisma.form.update({
     data: {
       visits: {
         increment: 1,
       },
     },
     where: {
-      shareUrl: formUrl,
+      id: form.id,
     },
   });
+
+  return {
+    content: form.content,
+  };
 }
 
 export async function UpdateFormContent(id: number, jsonContent: string) {
@@ -175,6 +190,20 @@ export async function PublishForm(id: number) {
 }
 
 export async function SubmitFunction(formUrl: string, content: string) {
+  const form = await prisma.form.findFirst({
+    where: {
+      shareUrl: formUrl,
+      published: true,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!form) {
+    throw new Error('Form not found or not published');
+  }
+
   return await prisma.form.update({
     data: {
       submissions: {
@@ -187,8 +216,7 @@ export async function SubmitFunction(formUrl: string, content: string) {
       },
     },
     where: {
-      shareUrl: formUrl,
-      published: true,
+      id: form.id,
     },
   });
 }
