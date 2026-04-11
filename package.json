@@ -2,6 +2,9 @@
   "name": "form-builder",
   "version": "0.1.0",
   "private": true,
+  "prisma": {
+    "schema": "src/prisma/schema.prisma"
+  },
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
