@@ -25,11 +25,11 @@ const eslintConfig = [
         "warn",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
-      "@next/next/no-html-link-for-pages": [
-        "warn",
-        "./app/(dashboard)/page.tsx",
-      ],
+      "@next/next/no-html-link-for-pages": "off",
     },
+  },
+  {
+    ignores: ["src/lib/generated/prisma/**"],
   },
 ];
 

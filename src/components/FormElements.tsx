@@ -50,7 +50,7 @@ export interface FormElement {
 export interface FormElementInstance {
   id: string;
   type: ElementType;
-  extraAttributes?: Record<string, any>;
+  extraAttributes?: Record<string, unknown>;
 }
 
 type FormElementsType = {

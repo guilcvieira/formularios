@@ -124,10 +124,14 @@ async function SubmissionsTable({ formId }: { formId: string }) {
   formElements.forEach((element) => {
     switch (element.type) {
       case 'TextField':
+        const attrs = element.extraAttributes as
+          | { label?: string; required?: boolean }
+          | undefined;
+
         columns.push({
           id: element.id,
-          label: element.extraAttributes?.label,
-          required: element.extraAttributes?.required,
+          label: attrs?.label ?? '',
+          required: attrs?.required ?? false,
           type: element.type,
         });
         break;
@@ -191,12 +195,11 @@ async function SubmissionsTable({ formId }: { formId: string }) {
 }
 
 function RowCell({
-  type,
+  type: _type,
   value,
 }: {
   type: ElementType;
   value: string | number | boolean;
 }) {
-  let node: React.ReactNode = value;
-  return <TableCell>{node}</TableCell>;
+  return <TableCell>{value}</TableCell>;
 }

@@ -1,14 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
-import {
-  ClerkProvider,
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from '@clerk/nextjs';
+import { ClerkProvider } from '@clerk/nextjs';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { Toaster } from '@/components/ui/sonner';
 import NextTopLoader from 'nextjs-toploader';
@@ -33,24 +26,34 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <ClerkProvider>
-      <html lang="en">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+  const appContent = (
+    <html lang="en">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <NextTopLoader showSpinner={false} />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
         >
-          <NextTopLoader showSpinner={false} />
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            {children}
-            <Toaster richColors />
-          </ThemeProvider>
-        </body>
-      </html>
+          {children}
+          <Toaster richColors />
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+
+  if (!publishableKey) {
+    return appContent;
+  }
+
+  return (
+    <ClerkProvider publishableKey={publishableKey}>
+      {appContent}
     </ClerkProvider>
   );
 }
