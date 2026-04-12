@@ -13,7 +13,9 @@ import {
 export default function LanguageSwitcher() {
   const { i18n, t } = useTranslation();
 
-  const currentLanguage = (i18n.resolvedLanguage || i18n.language || 'pt') as AppLanguages;
+  const currentLanguage = (i18n.resolvedLanguage ||
+    i18n.language ||
+    'pt') as AppLanguages;
 
   return (
     <Select

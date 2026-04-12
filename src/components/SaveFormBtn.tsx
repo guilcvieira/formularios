@@ -23,9 +23,7 @@ export default function SaveFormBtn({ id }: { id: number }) {
     } catch (error) {
       toast.error(t('save.error'), {
         description:
-          error instanceof Error
-            ? error.message
-            : t('generic.unexpectedError'),
+          error instanceof Error ? error.message : t('generic.unexpectedError'),
       });
     }
   };

@@ -50,9 +50,7 @@ export default function PublishFormBtn({ id }: { id: number }) {
           <AlertDialogDescription>
             {t('publish.confirmDescription')}
             <br />
-            <span className="font-medium">
-              {t('publish.confirmWarning')}
-            </span>
+            <span className="font-medium">{t('publish.confirmWarning')}</span>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

@@ -11,7 +11,9 @@ export default function FormElementsSidebar() {
 
   return (
     <div>
-      <p className="text-muted-foregroun/70 text-sm">{t('sidebar.formElements')}</p>
+      <p className="text-muted-foregroun/70 text-sm">
+        {t('sidebar.formElements')}
+      </p>
       <Separator className="my-2" />
       <p className="text-muted-foreground col-span-1 my-2 text-sm md:col-span-2">
         {t('sidebar.layoutElements')}

@@ -1,5 +1,9 @@
 import { cookies } from 'next/headers';
-import { AppLanguages, fallbackLng, resources } from '../../shared/i18n/resources';
+import {
+  AppLanguages,
+  fallbackLng,
+  resources,
+} from '../../shared/i18n/resources';
 
 type TranslationOptions = Record<string, string | number>;
 
@@ -33,9 +37,9 @@ export async function getServerT() {
   const cookieStore = await cookies();
   const cookieLang = cookieStore.get('i18next')?.value;
 
-  const language = (cookieLang && cookieLang in resources
-    ? cookieLang
-    : fallbackLng) as AppLanguages;
+  const language = (
+    cookieLang && cookieLang in resources ? cookieLang : fallbackLng
+  ) as AppLanguages;
 
   return (key: string, options?: TranslationOptions) => {
     const value = resolveValue(language, key);
