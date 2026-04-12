@@ -5,8 +5,10 @@ import useDesigner from './hooks/useDesigner';
 import { UpdateFormContent } from '@actions/form';
 import { toast } from 'sonner';
 import { ImSpinner2 } from 'react-icons/im';
+import { useTranslation } from 'react-i18next';
 
 export default function SaveFormBtn({ id }: { id: number }) {
+  const { t } = useTranslation();
   const { elements } = useDesigner();
   const [loading, startTransition] = useTransition();
 
@@ -15,15 +17,15 @@ export default function SaveFormBtn({ id }: { id: number }) {
       const jsonElements = JSON.stringify(elements);
       await UpdateFormContent(id, jsonElements);
 
-      toast.success('Form saved successfully', {
-        description: 'Your form has been saved.',
+      toast.success(t('save.success'), {
+        description: t('save.savedDescription'),
       });
     } catch (error) {
-      toast.error('Failed to save form', {
+      toast.error(t('save.error'), {
         description:
           error instanceof Error
             ? error.message
-            : 'An unexpected error occurred.',
+            : t('generic.unexpectedError'),
       });
     }
   };
@@ -36,7 +38,7 @@ export default function SaveFormBtn({ id }: { id: number }) {
       disabled={loading}
     >
       <HiSaveAs className="h-6 w-6" />
-      Save Form
+      {t('save.button')}
       {loading && <ImSpinner2 className="h-6 w-6 animate-spin" />}
     </Button>
   );

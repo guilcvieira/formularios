@@ -1,11 +1,15 @@
+'use client';
+
 import React from 'react';
 import useDesigner from './hooks/useDesigner';
 import { FormElements } from './FormElements';
 import { Button } from './ui/button';
 import { AiOutlineClose } from 'react-icons/ai';
 import { Separator } from './ui/separator';
+import { useTranslation } from 'react-i18next';
 
 export default function PropertiesFormSidebar() {
+  const { t } = useTranslation();
   const { selectedElement, setSelectedElement } = useDesigner();
 
   if (!selectedElement) return null;
@@ -16,7 +20,9 @@ export default function PropertiesFormSidebar() {
   return (
     <div className="flex flex-col p-2">
       <div className="flex items-center justify-between">
-        <p className="text-foreground/70 text-sm">Element Properties</p>
+        <p className="text-foreground/70 text-sm">
+          {t('sidebar.elementProperties')}
+        </p>
         <Button
           size={'icon'}
           variant={'ghost'}

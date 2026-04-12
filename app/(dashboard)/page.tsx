@@ -13,6 +13,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Form } from '@/lib/generated/prisma';
+import { getServerT } from '@/lib/server-i18n';
 import { formatDistance } from 'date-fns';
 import Link from 'next/link';
 import { Suspense } from 'react';
@@ -23,14 +24,16 @@ import { HiCursorClick } from 'react-icons/hi';
 import { LuView } from 'react-icons/lu';
 import { TbArrowBounce } from 'react-icons/tb';
 
-export default function Home() {
+export default async function Home() {
+  const t = await getServerT();
+
   return (
     <div className="container p-4">
-      <Suspense fallback={<StatsCards loading={true} />}>
+      <Suspense fallback={<StatsCards loading={true} t={t} />}>
         <CardStatsWrapper />
       </Suspense>
       <Separator className="my-4" />
-      <div className="text-2xl font-bold">Your Forms</div>
+      <div className="text-2xl font-bold">{t('dashboard.yourForms')}</div>
       <Separator className="my-4" />
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <CreateFormBtn />
@@ -48,48 +51,51 @@ export default function Home() {
 
 async function CardStatsWrapper() {
   const stats = await GetFormStats();
-  return <StatsCards loading={false} data={stats} />;
+  const t = await getServerT();
+
+  return <StatsCards loading={false} data={stats} t={t} />;
 }
 
 interface StatsCardsProps {
   loading: boolean;
   data?: Awaited<ReturnType<typeof GetFormStats>>;
+  t: (key: string) => string;
 }
 
-function StatsCards({ data, loading }: StatsCardsProps) {
+function StatsCards({ data, loading, t }: StatsCardsProps) {
   return (
     <div className="grid w-full grid-cols-1 gap-4 pt-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <StatsCard
-        title="Total Visits"
+        title={t('dashboard.totalVisits')}
         icon={<LuView className="text-blue-600" />}
-        helperText="All time form visits"
+        helperText={t('dashboard.allTimeFormVisits')}
         value={data?.visits?.toLocaleString()}
         loading={loading}
         className="gap-4 shadow shadow-blue-600"
       />
 
       <StatsCard
-        title="Total Submissions"
+        title={t('dashboard.totalSubmissions')}
         icon={<FaWpforms className="text-yellow-600" />}
-        helperText="All time form submissions"
+        helperText={t('dashboard.allTimeFormSubmissions')}
         value={data?.submissions?.toLocaleString()}
         loading={loading}
         className="gap-4 shadow shadow-yellow-600"
       />
 
       <StatsCard
-        title="Submission rate"
+        title={t('dashboard.submissionRate')}
         icon={<HiCursorClick className="text-green-600" />}
-        helperText="Visistes that resulted in a submission"
+        helperText={t('dashboard.visitorsSubmitted')}
         value={data?.submissionRate?.toLocaleString() + '%' || ''}
         loading={loading}
         className="gap-4 shadow shadow-green-600"
       />
 
       <StatsCard
-        title="Bounce rate"
+        title={t('dashboard.bounceRate')}
         icon={<TbArrowBounce className="text-red-600" />}
-        helperText="Visistes that leave without interaction"
+        helperText={t('dashboard.visitorsLeft')}
         value={data?.bounceRate?.toLocaleString() + '%' || ''}
         loading={loading}
         className="gap-4 shadow shadow-red-600"
@@ -147,23 +153,27 @@ function FormCardSkeleton() {
 
 async function FormCards() {
   const forms = await GetForms();
+  const t = await getServerT();
+
   return (
     <>
       {forms.map((form) => (
-        <FormCard key={form.id} form={form} />
+        <FormCard key={form.id} form={form} t={t} />
       ))}
     </>
   );
 }
 
-function FormCard({ form }: { form: Form }) {
+function FormCard({ form, t }: { form: Form; t: (key: string) => string }) {
   return (
     <Card className="border-border/30 flex h-[190px] w-full flex-col justify-between gap-4 rounded-md border-2 py-4 shadow-none">
       <CardHeader>
         <CardTitle className="flex items-center justify-between gap-2">
           <span className="truncate font-bold">{form.name}</span>
-          {form.published && <Badge>Published</Badge>}
-          {!form.published && <Badge variant="destructive">Draft</Badge>}
+          {form.published && <Badge>{t('dashboard.published')}</Badge>}
+          {!form.published && (
+            <Badge variant="destructive">{t('dashboard.draft')}</Badge>
+          )}
         </CardTitle>
         <CardDescription className="text-muted-foreground flex items-center justify-between text-sm">
           <span className="truncate">
@@ -171,7 +181,7 @@ function FormCard({ form }: { form: Form }) {
               addSuffix: true,
             })}
           </span>
-          {!form.published && (
+          {form.published && (
             <span className="flex items-center gap-2">
               <LuView className="text-blue-600" />
               {form.visits?.toLocaleString() || '0'}
@@ -182,13 +192,13 @@ function FormCard({ form }: { form: Form }) {
         </CardDescription>
       </CardHeader>
       <CardContent className="text-muted-foreground h-[20px] truncate text-sm">
-        {form.description || 'No description provided'}
+        {form.description || t('dashboard.noDescription')}
       </CardContent>
       <CardFooter>
         {form.published && (
           <Button asChild className="mt-2 w-full gap-4 text-base">
             <Link href={`/forms/${form.id}`}>
-              View submissions
+              {t('dashboard.viewSubmissions')}
               <BiRightArrowAlt />
             </Link>
           </Button>
@@ -201,7 +211,7 @@ function FormCard({ form }: { form: Form }) {
             className="mt-2 w-full gap-4 text-base"
           >
             <Link href={`/builder/${form.id}`}>
-              Edit Form
+              {t('dashboard.editForm')}
               <FaEdit />
             </Link>
           </Button>

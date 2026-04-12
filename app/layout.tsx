@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { ClerkProvider } from '@clerk/nextjs';
+import I18nProvider from '@/components/providers/I18nProvider';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { Toaster } from '@/components/ui/sonner';
 import NextTopLoader from 'nextjs-toploader';
@@ -40,8 +41,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-          <Toaster richColors />
+          <I18nProvider>
+            {children}
+            <Toaster richColors />
+          </I18nProvider>
         </ThemeProvider>
       </body>
     </html>

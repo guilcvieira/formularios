@@ -4,8 +4,10 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { ImShare } from 'react-icons/im';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export default function FormLinkShare({ shareUrl }: { shareUrl: string }) {
+  const { t } = useTranslation();
   const [mounted, setMounted] = React.useState(false);
 
   useEffect(() => {
@@ -25,13 +27,13 @@ export default function FormLinkShare({ shareUrl }: { shareUrl: string }) {
         className="w-[250px]"
         onClick={() => {
           navigator.clipboard.writeText(sharelink);
-          toast('Copied', {
-            description: 'Link copied to clipboard!',
+          toast(t('share.copiedTitle'), {
+            description: t('share.copiedDescription'),
           });
         }}
       >
         <ImShare className="size-4" />
-        Share Link
+        {t('share.button')}
       </Button>
     </div>
   );

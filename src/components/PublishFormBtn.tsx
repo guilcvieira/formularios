@@ -16,8 +16,10 @@ import { FaIcons } from 'react-icons/fa';
 import { toast } from 'sonner';
 import { PublishForm } from '@actions/form';
 import { useRouter } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 
 export default function PublishFormBtn({ id }: { id: number }) {
+  const { t } = useTranslation();
   const [loading, startTransition] = useTransition();
   const router = useRouter();
 
@@ -25,13 +27,13 @@ export default function PublishFormBtn({ id }: { id: number }) {
     try {
       await PublishForm(id)
         .then(() => {
-          toast.success('Form published successfully!');
+          toast.success(t('publish.success'));
         })
         .finally(() => {
           router.refresh();
         });
     } catch (error) {
-      toast.error('Failed to publish form. Please try again later.');
+      toast.error(t('publish.error'));
     }
   }
   return (
@@ -39,22 +41,22 @@ export default function PublishFormBtn({ id }: { id: number }) {
       <AlertDialogTrigger asChild>
         <Button className="gap-2" variant="default">
           <MdOutlinePublish className="h-6 w-6" />
-          Publish Form
+          {t('publish.button')}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Are you sure? </AlertDialogTitle>
+          <AlertDialogTitle>{t('publish.confirmTitle')}</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to publish this form?
+            {t('publish.confirmDescription')}
             <br />
             <span className="font-medium">
-              Once published, it will be available for users to fill out.
+              {t('publish.confirmWarning')}
             </span>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>{t('publish.cancel')}</AlertDialogCancel>
           <AlertDialogAction
             disabled={loading}
             className="bg-primary text-primary-foreground hover:bg-primary/90"
@@ -65,7 +67,7 @@ export default function PublishFormBtn({ id }: { id: number }) {
               startTransition(publishForm);
             }}
           >
-            Publish
+            {t('publish.confirm')}
             {loading && <FaIcons className="animate-spin" />}
           </AlertDialogAction>
         </AlertDialogFooter>

@@ -1,4 +1,5 @@
 import DesignerContextProvider from '@/components/context/DesignerContext';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 import Logo from '@/components/Logo';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import {
@@ -15,6 +16,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
       <nav className="border-border flex h-14 items-center justify-between border-b px-4 pt-2">
         <Logo />
         <div className="flex items-center gap-4">
+          <LanguageSwitcher />
           <ThemeSwitcher />
           <div className="flex items-center gap-2">
             <SignedOut>

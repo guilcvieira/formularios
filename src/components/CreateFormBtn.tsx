@@ -30,9 +30,11 @@ import {
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { useRouter } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 
 function CreateFormBtn() {
   const router = useRouter();
+  const { t } = useTranslation();
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
   });
@@ -40,18 +42,18 @@ function CreateFormBtn() {
   const onSubmit = async (data: FormSchema) => {
     try {
       const formId = await CreateForm(data);
-      toast.success('Form created successfully!', {
-        description: `Your form has been created and is ready to use. ID: ${formId}`,
+      toast.success(t('createForm.successTitle'), {
+        description: t('createForm.successDescription', { id: formId }),
       });
       form.reset();
 
       router.push(`/builder/${formId}`);
     } catch (error) {
-      toast.error('Failed to create form. Please try again.', {
+      toast.error(t('createForm.errorTitle'), {
         description:
           error instanceof Error
             ? error.message
-            : 'An unexpected error occurred.',
+            : t('createForm.errorDescription'),
       });
       toast;
     }
@@ -66,15 +68,15 @@ function CreateFormBtn() {
         >
           <BsFileEarmarkPlus className="text-muted-foreground group-hover:text-primary h-8 w-8" />
           <p className="text-muted-foreground group-hover:text-primary/80 text-xl">
-            Create new Form
+            {t('createForm.cardCta')}
           </p>
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create a new form</DialogTitle>
+          <DialogTitle>{t('createForm.dialogTitle')}</DialogTitle>
           <DialogDescription>
-            Create a new form to start collecting responses.
+            {t('createForm.dialogDescription')}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -88,7 +90,7 @@ function CreateFormBtn() {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>{t('createForm.name')}</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -101,9 +103,12 @@ function CreateFormBtn() {
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>{t('createForm.description')}</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Form description" {...field} />
+                    <Textarea
+                      placeholder={t('createForm.descriptionPlaceholder')}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -116,7 +121,9 @@ function CreateFormBtn() {
                 ) : (
                   <BsFileEarmarkPlus className="mr-2" />
                 )}
-                Create Form
+                {form.formState.isSubmitting
+                  ? t('createForm.creating')
+                  : t('createForm.submit')}
               </Button>
             </DialogFooter>
           </form>

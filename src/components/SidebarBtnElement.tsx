@@ -1,14 +1,30 @@
+'use client';
+
 import { cn } from '@/lib/utils';
 import { useDraggable } from '@dnd-kit/core';
 import { FormElement } from './FormElements';
 import { Button } from './ui/button';
+import { useTranslation } from 'react-i18next';
+
+const fieldTranslationKey: Record<FormElement['type'], string> = {
+  TextField: 'fields.textField',
+  TitleField: 'fields.titleField',
+  SubtitleField: 'fields.subtitleField',
+  ParagraphField: 'fields.paragraphField',
+  SeparatorField: 'fields.separatorField',
+  SpacerField: 'fields.spacerField',
+};
 
 export default function SidebarBtnElement({
   formElement,
 }: {
   formElement: FormElement;
 }) {
+  const { t } = useTranslation();
   const { label, icon: Icon } = formElement.designerBtnElement;
+  const translatedLabel = t(fieldTranslationKey[formElement.type], {
+    defaultValue: label,
+  });
   const draggable = useDraggable({
     id: 'designer-btn-' + formElement.type,
     data: {
@@ -28,7 +44,7 @@ export default function SidebarBtnElement({
       {...draggable.listeners}
     >
       <Icon className="text-primary size-8 cursor-grab" />
-      <p className="text-xs">{label}</p>
+      <p className="text-xs">{translatedLabel}</p>
     </Button>
   );
 }
@@ -38,7 +54,11 @@ export function SidebarBtnElementDragOverlay({
 }: {
   formElement: FormElement;
 }) {
+  const { t } = useTranslation();
   const { label, icon: Icon } = formElement.designerBtnElement;
+  const translatedLabel = t(fieldTranslationKey[formElement.type], {
+    defaultValue: label,
+  });
   const draggable = useDraggable({
     id: 'designer-btn-' + formElement.type,
     data: {
@@ -52,7 +72,7 @@ export function SidebarBtnElementDragOverlay({
       className="flex h-[120px] w-[120px] flex-col items-center gap-2"
     >
       <Icon className="text-primary size-8 cursor-grab" />
-      <p className="text-xs">{label}</p>
+      <p className="text-xs">{translatedLabel}</p>
     </Button>
   );
 }

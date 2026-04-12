@@ -1,8 +1,10 @@
 'use client';
 import React, { useEffect } from 'react';
 import { Button } from './ui/button';
+import { useTranslation } from 'react-i18next';
 
 export default function VisitBtn({ shareUrl }: { shareUrl: string }) {
+  const { t } = useTranslation();
   const [mounted, setMounted] = React.useState(false);
 
   useEffect(() => {
@@ -22,7 +24,7 @@ export default function VisitBtn({ shareUrl }: { shareUrl: string }) {
         window.open(sharelink, '_blank');
       }}
     >
-      Visit
+      {t('visit.cta')}
     </Button>
   );
 }

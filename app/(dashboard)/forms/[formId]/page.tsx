@@ -7,6 +7,7 @@ import { FaWpforms } from 'react-icons/fa';
 import { HiCursorClick } from 'react-icons/hi';
 import { TbArrowBounce } from 'react-icons/tb';
 import { ElementType, FormElementInstance } from '@/components/FormElements';
+import { getServerT } from '@/lib/server-i18n';
 import {
   Table,
   TableBody,
@@ -22,6 +23,7 @@ async function FormDetailPage({
 }: {
   params: Promise<{ formId: string }>;
 }) {
+  const t = await getServerT();
   const { formId } = await params;
   const form = await GetFormById(Number(formId));
 
@@ -54,36 +56,36 @@ async function FormDetailPage({
 
       <div className="container mx-auto grid w-full grid-cols-1 gap-4 pt-8 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard
-          title="Total Visits"
+          title={t('dashboard.totalVisits')}
           icon={<LuView className="text-blue-600" />}
-          helperText="All time form visits"
+          helperText={t('dashboard.allTimeFormVisits')}
           value={visits?.toLocaleString()}
           loading={false}
           className="gap-4 shadow shadow-blue-600"
         />
 
         <StatsCard
-          title="Total Submissions"
+          title={t('dashboard.totalSubmissions')}
           icon={<FaWpforms className="text-yellow-600" />}
-          helperText="All time form submissions"
+          helperText={t('dashboard.allTimeFormSubmissions')}
           value={submissions?.toLocaleString()}
           loading={false}
           className="gap-4 shadow shadow-yellow-600"
         />
 
         <StatsCard
-          title="Submission rate"
+          title={t('dashboard.submissionRate')}
           icon={<HiCursorClick className="text-green-600" />}
-          helperText="Visistes that resulted in a submission"
+          helperText={t('dashboard.visitorsSubmitted')}
           value={submissionRate?.toLocaleString() + '%' || ''}
           loading={false}
           className="gap-4 shadow shadow-green-600"
         />
 
         <StatsCard
-          title="Bounce rate"
+          title={t('dashboard.bounceRate')}
           icon={<TbArrowBounce className="text-red-600" />}
-          helperText="Visistes that leave without interaction"
+          helperText={t('dashboard.visitorsLeft')}
           value={bounceRate?.toLocaleString() + '%' || ''}
           loading={false}
           className="gap-4 shadow shadow-red-600"
@@ -91,7 +93,7 @@ async function FormDetailPage({
       </div>
 
       <div className="container mx-auto w-full pt-10">
-        <SubmissionsTable formId={formId} />
+        <SubmissionsTable formId={formId} t={t} />
       </div>
     </div>
   );
@@ -105,11 +107,17 @@ type Row = {
   submittedAt: Date;
 };
 
-async function SubmissionsTable({ formId }: { formId: string }) {
+async function SubmissionsTable({
+  formId,
+  t,
+}: {
+  formId: string;
+  t: (key: string) => string;
+}) {
   const form = await GetFormWithSubissions(Number(formId));
 
   if (!form) {
-    return <p>No submissions found for this form.</p>;
+    return <p>{t('formDetails.noSubmissions')}</p>;
   }
 
   const formElements = JSON.parse(form.content) as FormElementInstance[];
@@ -151,7 +159,7 @@ async function SubmissionsTable({ formId }: { formId: string }) {
 
   return (
     <>
-      <h1>Submissions</h1>
+      <h1>{t('formDetails.submissions')}</h1>
 
       <div className="rounded-md border">
         <Table>
@@ -166,7 +174,7 @@ async function SubmissionsTable({ formId }: { formId: string }) {
                 </TableHead>
               ))}
               <TableHead className="text-muted-foreground text-right uppercase">
-                Submitted At
+                {t('formDetails.submittedAt')}
               </TableHead>
             </TableRow>
           </TableHeader>

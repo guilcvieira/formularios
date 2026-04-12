@@ -7,11 +7,14 @@ import {
 } from '../FormElements';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
-import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
 import useDesigner from '../hooks/useDesigner';
+import {
+  textFieldPropertiesSchema,
+  type TextFieldPropertiesSchemaType,
+} from '@/shared/schemas/forms/fields/text-field.schema';
 
 import {
   Form,
@@ -26,15 +29,6 @@ import { Switch } from '../ui/switch';
 import { cn } from '@/lib/utils';
 
 const type: ElementType = 'TextField';
-
-const propertiesSchema = z.object({
-  label: z.string().min(1).max(50),
-  helperText: z.string().max(200),
-  required: z.boolean(),
-  placeholder: z.string().max(50),
-});
-
-type PropertiesSchemaType = z.infer<typeof propertiesSchema>;
 
 const extraAttributes = {
   placeholder: 'Enter text here',
@@ -106,8 +100,8 @@ function PropertiesComponent({ element }: { element: FormElementInstance }) {
   const { updateElement } = useDesigner();
   const customElement = element as CustomInstance;
 
-  const form = useForm<PropertiesSchemaType>({
-    resolver: zodResolver(propertiesSchema),
+  const form = useForm<TextFieldPropertiesSchemaType>({
+    resolver: zodResolver(textFieldPropertiesSchema),
     mode: 'onBlur',
     defaultValues: {
       label: customElement.extraAttributes.label,
@@ -121,7 +115,7 @@ function PropertiesComponent({ element }: { element: FormElementInstance }) {
     form.reset(customElement.extraAttributes);
   }, [customElement, form]);
 
-  const applyChanges = (data: PropertiesSchemaType) => {
+  const applyChanges = (data: TextFieldPropertiesSchemaType) => {
     updateElement(element.id, {
       ...customElement,
       extraAttributes: { ...data },

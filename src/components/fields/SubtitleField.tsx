@@ -1,7 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import {
   ElementType,
   FormElement,
@@ -11,6 +10,10 @@ import {
 import useDesigner from '../hooks/useDesigner';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
+import {
+  subtitleFieldPropertiesSchema,
+  type SubtitleFieldPropertiesSchemaType,
+} from '@/shared/schemas/forms/fields/subtitle-field.schema';
 
 import { LuHeading2 } from 'react-icons/lu';
 import {
@@ -23,12 +26,6 @@ import {
 } from '../ui/form';
 
 const type: ElementType = 'SubtitleField';
-
-const propertiesSchema = z.object({
-  title: z.string().min(1).max(50),
-});
-
-type PropertiesSchemaType = z.infer<typeof propertiesSchema>;
 
 const extraAttributes = {
   title: 'Subtitle Field',
@@ -73,8 +70,8 @@ function PropertiesComponent({ element }: { element: FormElementInstance }) {
   const { updateElement } = useDesigner();
   const customElement = element as CustomInstance;
 
-  const form = useForm<PropertiesSchemaType>({
-    resolver: zodResolver(propertiesSchema),
+  const form = useForm<SubtitleFieldPropertiesSchemaType>({
+    resolver: zodResolver(subtitleFieldPropertiesSchema),
     mode: 'onBlur',
     defaultValues: {
       title: customElement.extraAttributes.title,
@@ -85,7 +82,7 @@ function PropertiesComponent({ element }: { element: FormElementInstance }) {
     form.reset(customElement.extraAttributes);
   }, [customElement, form]);
 
-  const applyChanges = (data: PropertiesSchemaType) => {
+  const applyChanges = (data: SubtitleFieldPropertiesSchemaType) => {
     updateElement(element.id, {
       ...customElement,
       extraAttributes: { ...data },

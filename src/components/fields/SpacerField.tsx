@@ -1,7 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import {
   ElementType,
   FormElement,
@@ -11,6 +10,10 @@ import {
 import useDesigner from '../hooks/useDesigner';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
+import {
+  spacerFieldPropertiesSchema,
+  type SpacerFieldPropertiesSchemaType,
+} from '@/shared/schemas/forms/fields/spacer-field.schema';
 
 import { LuHeading1, LuSeparatorHorizontal } from 'react-icons/lu';
 import {
@@ -24,12 +27,6 @@ import {
 import { Slider } from '../ui/slider';
 
 const type: ElementType = 'SpacerField';
-
-const propertiesSchema = z.object({
-  height: z.number().min(5).max(200),
-});
-
-type PropertiesSchemaType = z.infer<typeof propertiesSchema>;
 
 const extraAttributes = {
   height: 20,
@@ -74,8 +71,8 @@ function PropertiesComponent({ element }: { element: FormElementInstance }) {
   const { updateElement } = useDesigner();
   const customElement = element as CustomInstance;
 
-  const form = useForm<PropertiesSchemaType>({
-    resolver: zodResolver(propertiesSchema),
+  const form = useForm<SpacerFieldPropertiesSchemaType>({
+    resolver: zodResolver(spacerFieldPropertiesSchema),
     mode: 'onBlur',
     defaultValues: {
       height: customElement.extraAttributes.height,
@@ -86,7 +83,7 @@ function PropertiesComponent({ element }: { element: FormElementInstance }) {
     form.reset(customElement.extraAttributes);
   }, [customElement, form]);
 
-  const applyChanges = (data: PropertiesSchemaType) => {
+  const applyChanges = (data: SpacerFieldPropertiesSchemaType) => {
     updateElement(element.id, {
       ...customElement,
       extraAttributes: { ...data },

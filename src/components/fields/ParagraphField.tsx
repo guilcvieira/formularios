@@ -1,10 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { ElementType, FormElement, FormElementInstance } from '../FormElements';
 import useDesigner from '../hooks/useDesigner';
 import { Label } from '../ui/label';
+import {
+  paragraphFieldPropertiesSchema,
+  type ParagraphFieldPropertiesSchemaType,
+} from '@/shared/schemas/forms/fields/paragraph-field.schema';
 
 import { BsTextParagraph } from 'react-icons/bs';
 import {
@@ -19,13 +22,6 @@ import {
 import { Textarea } from '../ui/textarea';
 
 const type: ElementType = 'ParagraphField';
-
-const propertiesSchema = z.object({
-  text: z.string().min(1).max(500),
-  size: z.number().min(5).max(200).optional(),
-});
-
-type PropertiesSchemaType = z.infer<typeof propertiesSchema>;
 
 const extraAttributes = {
   text: 'Enter your text here',
@@ -88,8 +84,8 @@ function PropertiesComponent({ element }: { element: FormElementInstance }) {
   const { updateElement } = useDesigner();
   const customElement = element as CustomInstance;
 
-  const form = useForm<PropertiesSchemaType>({
-    resolver: zodResolver(propertiesSchema),
+  const form = useForm<ParagraphFieldPropertiesSchemaType>({
+    resolver: zodResolver(paragraphFieldPropertiesSchema),
     mode: 'onBlur',
     defaultValues: {
       text: customElement.extraAttributes.text,
@@ -100,7 +96,7 @@ function PropertiesComponent({ element }: { element: FormElementInstance }) {
     form.reset(customElement.extraAttributes);
   }, [customElement, form]);
 
-  const applyChanges = (data: PropertiesSchemaType) => {
+  const applyChanges = (data: ParagraphFieldPropertiesSchemaType) => {
     updateElement(element.id, {
       ...customElement,
       extraAttributes: { ...data },

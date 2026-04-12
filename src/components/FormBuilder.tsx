@@ -22,8 +22,10 @@ import { toast } from 'sonner';
 import Link from 'next/link';
 import { BsArrowLeft, BsArrowRight } from 'react-icons/bs';
 import Confetti from 'react-confetti';
+import { useTranslation } from 'react-i18next';
 
 export default function FormBuilder({ form }: { form: Form }) {
+  const { t } = useTranslation();
   const { setElements } = useDesigner();
   const [isReady, setIsReady] = useState(false);
 
@@ -71,11 +73,11 @@ export default function FormBuilder({ form }: { form: Form }) {
         <div className="flex h-full w-full flex-col items-center justify-center">
           <div className="max-w-md">
             <h1 className="text-primary mb-10 border-b pb-2 text-center text-4xl font-bold">
-              Form Published 🎉🎉
+              {t('formBuilder.publishedTitle')} 🎉🎉
             </h1>
-            <h2 className="text-2xl">Share this form</h2>
+            <h2 className="text-2xl">{t('formBuilder.shareThisForm')}</h2>
             <h3 className="text-muted-foreground border-b pb-10 text-xl">
-              Anyone with the link can view and submit the form
+              {t('formBuilder.shareDescription')}
             </h3>
             <div className="my-4 flex w-full flex-col items-center gap-2 border-b pb-4">
               <Input className="w-full" readOnly value={shareUrl} />
@@ -83,23 +85,23 @@ export default function FormBuilder({ form }: { form: Form }) {
                 className="mt-2 w-full"
                 onClick={() => {
                   navigator.clipboard.writeText(shareUrl);
-                  toast.message('Link copied to clipboard!');
+                  toast.message(t('formBuilder.linkCopied'));
                 }}
               >
-                Copy Link
+                {t('formBuilder.copyLink')}
               </Button>
             </div>
             <div className="flex justify-between">
               <Button variant={'link'} asChild>
                 <Link href="/" className="gap-2">
                   <BsArrowLeft />
-                  Back to Dashboard
+                  {t('formBuilder.backToDashboard')}
                 </Link>
               </Button>
 
               <Button variant={'link'} asChild>
                 <Link href={`/forms/${form.id}`} className="gap-2">
-                  Form Details
+                  {t('formBuilder.formDetails')}
                   <BsArrowRight />
                 </Link>
               </Button>
@@ -115,7 +117,9 @@ export default function FormBuilder({ form }: { form: Form }) {
       <main className="flex flex-1 flex-col">
         <nav className="flex items-center justify-between gap-3 border-b-2 p-4">
           <h2 className="truncate font-medium">
-            <span className="text-muted-foreground mr-2">Form:</span>
+            <span className="text-muted-foreground mr-2">
+              {t('formBuilder.formLabel')}
+            </span>
             {form.name}
           </h2>
           <div className="flex items-center gap-2">
