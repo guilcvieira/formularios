@@ -52,8 +52,6 @@ export default function RootLayout({
   }
 
   return (
-    <ClerkProvider publishableKey={publishableKey}>
-      {appContent}
-    </ClerkProvider>
+    <ClerkProvider publishableKey={publishableKey}>{appContent}</ClerkProvider>
   );
 }
