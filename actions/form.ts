@@ -137,6 +137,7 @@ export async function GetFormContentByURL(formUrl: string) {
   });
 
   return {
+    id: form.id,
     content: form.content,
   };
 }
@@ -189,7 +190,12 @@ export async function PublishForm(id: number) {
   return form;
 }
 
-export async function SubmitFunction(formUrl: string, content: string) {
+export async function SubmitFunction(
+  formUrl: string,
+  content: string,
+  timeToComplete?: number,
+  device?: string,
+) {
   const form = await prisma.form.findFirst({
     where: {
       shareUrl: formUrl,
@@ -212,6 +218,8 @@ export async function SubmitFunction(formUrl: string, content: string) {
       FormSubmission: {
         create: {
           content,
+          timeToComplete: timeToComplete ?? null,
+          device: device ?? 'unknown',
         },
       },
     },

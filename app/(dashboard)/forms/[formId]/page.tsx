@@ -1,7 +1,8 @@
 import FormLinkShare from '@/components/FormLinkShare';
 import VisitBtn from '@/components/VisitBtn';
 import { GetFormById, GetFormWithSubissions } from '@actions/form';
-import { StatsCard } from '../../page';
+import { GetFormAnalytics } from '@actions/analytics';
+import { StatsCard } from '../../_components/StatsCard';
 import { LuView } from 'react-icons/lu';
 import { FaWpforms } from 'react-icons/fa';
 import { HiCursorClick } from 'react-icons/hi';
@@ -17,6 +18,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatDistance } from 'date-fns';
+import { FormAnalyticsCharts } from '@/components/FormAnalyticsCharts';
+import { Separator } from '@/components/ui/separator';
+import { SubmissionsTable } from './_components/SubmissionsTable';
 
 async function FormDetailPage({
   params,
@@ -39,6 +43,15 @@ async function FormDetailPage({
   }
 
   const bounceRate = 100 - submissionRate;
+
+  const formElements = JSON.parse(form.content) as FormElementInstance[];
+  const fieldLabels: Record<string, string> = {};
+  formElements.forEach((el) => {
+    const attrs = el.extraAttributes as { label?: string } | undefined;
+    fieldLabels[el.id] = attrs?.label || el.type;
+  });
+
+  const analytics = await GetFormAnalytics(Number(formId));
 
   return (
     <div className="flex w-full flex-col gap-4">
@@ -92,7 +105,38 @@ async function FormDetailPage({
         />
       </div>
 
+      <div className="container mx-auto w-full pt-6">
+        <Separator className="mb-6" />
+        <h2 className="mb-4 text-2xl font-bold">{t('analytics.title')}</h2>
+        <FormAnalyticsCharts
+          data={analytics}
+          fieldLabels={fieldLabels}
+          labels={{
+            avgTimeToComplete: t('analytics.avgTimeToComplete'),
+            avgTimeHelper: t('analytics.avgTimeHelper'),
+            basedOnSubmissions: t('analytics.basedOnSubmissions'),
+            deviceBreakdown: t('analytics.deviceBreakdown'),
+            deviceHelper: t('analytics.deviceHelper'),
+            desktop: t('analytics.desktop'),
+            mobile: t('analytics.mobile'),
+            tablet: t('analytics.tablet'),
+            submissions: t('analytics.submissions'),
+            visits: t('analytics.visits'),
+            submissionTimeline: t('analytics.submissionTimeline'),
+            timelineHelper: t('analytics.timelineHelper'),
+            fieldDropOff: t('analytics.fieldDropOff'),
+            dropOffHelper: t('analytics.dropOffHelper'),
+            dropOffRate: t('analytics.dropOffRate'),
+            fieldErrorRate: t('analytics.fieldErrorRate'),
+            errorRateHelper: t('analytics.errorRateHelper'),
+            errorRate: t('analytics.errorRate'),
+            noData: t('analytics.noData'),
+          }}
+        />
+      </div>
+
       <div className="container mx-auto w-full pt-10">
+        <Separator className="mb-6" />
         <SubmissionsTable formId={formId} t={t} />
       </div>
     </div>
@@ -100,114 +144,3 @@ async function FormDetailPage({
 }
 
 export default FormDetailPage;
-
-type Row = {
-  [key: string]: string | number | boolean;
-} & {
-  submittedAt: Date;
-};
-
-async function SubmissionsTable({
-  formId,
-  t,
-}: {
-  formId: string;
-  t: (key: string) => string;
-}) {
-  const form = await GetFormWithSubissions(Number(formId));
-
-  if (!form) {
-    return <p>{t('formDetails.noSubmissions')}</p>;
-  }
-
-  const formElements = JSON.parse(form.content) as FormElementInstance[];
-
-  const columns: {
-    id: string;
-    label: string;
-    required: boolean;
-    type: ElementType;
-  }[] = [];
-
-  formElements.forEach((element) => {
-    switch (element.type) {
-      case 'TextField':
-        const attrs = element.extraAttributes as
-          | { label?: string; required?: boolean }
-          | undefined;
-
-        columns.push({
-          id: element.id,
-          label: attrs?.label ?? '',
-          required: attrs?.required ?? false,
-          type: element.type,
-        });
-        break;
-      default:
-        break;
-    }
-  });
-
-  const rows: Row[] = [];
-  form.FormSubmission.forEach((submission) => {
-    const content = JSON.parse(submission.content);
-    rows.push({
-      ...content,
-      submittedAt: submission.createdAt,
-    });
-  });
-
-  return (
-    <>
-      <h1>{t('formDetails.submissions')}</h1>
-
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {columns.map((column) => (
-                <TableHead
-                  key={column.id}
-                  className="text-muted-foreground uppercase"
-                >
-                  {column.label}
-                </TableHead>
-              ))}
-              <TableHead className="text-muted-foreground text-right uppercase">
-                {t('formDetails.submittedAt')}
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.map((row, index) => (
-              <TableRow key={index}>
-                {columns.map((column) => (
-                  <RowCell
-                    key={column.id}
-                    type={column.type}
-                    value={row[column.id]}
-                  />
-                ))}
-                <TableCell className="text-muted-foreground text-right">
-                  {formatDistance(row.submittedAt, new Date(), {
-                    addSuffix: true,
-                  })}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </>
-  );
-}
-
-function RowCell({
-  type: _type,
-  value,
-}: {
-  type: ElementType;
-  value: string | number | boolean;
-}) {
-  return <TableCell>{value}</TableCell>;
-}

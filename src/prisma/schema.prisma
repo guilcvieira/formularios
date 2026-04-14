@@ -16,7 +16,7 @@ datasource db {
 
 model Form {
   id     Int    @id @default(autoincrement())
-  userId String @unique
+  userId String
 
   published   Boolean @default(false)
   name        String
@@ -28,6 +28,7 @@ model Form {
 
   shareUrl       String           @default(uuid())
   FormSubmission FormSubmission[]
+  FormEvent      FormEvent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -39,9 +40,27 @@ model FormSubmission {
   id     Int @id @default(autoincrement())
   formId Int
 
-  form    Form   @relation(fields: [formId], references: [id])
-  content String
+  form           Form   @relation(fields: [formId], references: [id])
+  content        String
+  timeToComplete Int?
+  device         String @default("unknown")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model FormEvent {
+  id        Int    @id @default(autoincrement())
+  formId    Int
+  form      Form   @relation(fields: [formId], references: [id])
+
+  sessionId String
+  type      String   // "form_start", "field_interaction", "field_error", "form_abandon"
+  fieldId   String?
+  metadata  String?  // JSON string for extra data (device, user-agent, etc.)
+
+  createdAt DateTime @default(now())
+
+  @@index([formId, type])
+  @@index([formId, sessionId])
 }

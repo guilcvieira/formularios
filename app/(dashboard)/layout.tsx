@@ -13,10 +13,10 @@ import {
 export default function Layout({ children }: React.PropsWithChildren) {
   return (
     <div className="bg-background flex max-h-screen min-h-screen min-w-screen flex-col">
-      <nav className="border-border flex h-14 items-center justify-between border-b px-4 pt-2">
+      <nav className="border-border flex h-14 items-center justify-between border-b px-4 py-2">
         <Logo />
         <div className="flex items-center gap-4">
-          <LanguageSwitcher />
+          {/* <LanguageSwitcher /> */}
           <ThemeSwitcher />
           <div className="flex items-center gap-2">
             <SignedOut>
