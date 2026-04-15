@@ -41,7 +41,7 @@ async function FormDetailPage({
   const analytics = await GetFormAnalytics(Number(formId));
 
   return (
-    <div className="flex w-full flex-col gap-4">
+    <div className="flex w-full flex-col gap-4 pb-8">
       <div className="border-muted w-full border-y py-10">
         <div className="container mx-auto flex w-full justify-between self-center">
           <h1 className="truncate text-4xl font-bold">{form.name}</h1>
