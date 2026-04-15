@@ -1,25 +1,12 @@
+import { FormElementInstance } from '@/components/FormElements';
 import FormLinkShare from '@/components/FormLinkShare';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import VisitBtn from '@/components/VisitBtn';
-import { GetFormById, GetFormWithSubissions } from '@actions/form';
-import { GetFormAnalytics } from '@actions/analytics';
-import { StatsCard } from '../../_components/StatsCard';
-import { LuView } from 'react-icons/lu';
-import { FaWpforms } from 'react-icons/fa';
-import { HiCursorClick } from 'react-icons/hi';
-import { TbArrowBounce } from 'react-icons/tb';
-import { ElementType, FormElementInstance } from '@/components/FormElements';
 import { getServerT } from '@/lib/server-i18n';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { formatDistance } from 'date-fns';
-import { FormAnalyticsCharts } from '@/components/FormAnalyticsCharts';
-import { Separator } from '@/components/ui/separator';
+import { GetFormAnalytics } from '@actions/analytics';
+import { GetFormById } from '@actions/form';
+import { ChartLineIcon, ClipboardListIcon } from 'lucide-react';
+import { FormAnalytics } from './_components/FormAnalytics';
 import { SubmissionsTable } from './_components/SubmissionsTable';
 
 async function FormDetailPage({
@@ -67,78 +54,50 @@ async function FormDetailPage({
         </div>
       </div>
 
-      <div className="container mx-auto grid w-full grid-cols-1 gap-4 pt-8 md:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title={t('dashboard.totalVisits')}
-          icon={<LuView className="text-blue-600" />}
-          helperText={t('dashboard.allTimeFormVisits')}
-          value={visits?.toLocaleString()}
-          loading={false}
-          className="gap-4 shadow shadow-blue-600"
-        />
-
-        <StatsCard
-          title={t('dashboard.totalSubmissions')}
-          icon={<FaWpforms className="text-yellow-600" />}
-          helperText={t('dashboard.allTimeFormSubmissions')}
-          value={submissions?.toLocaleString()}
-          loading={false}
-          className="gap-4 shadow shadow-yellow-600"
-        />
-
-        <StatsCard
-          title={t('dashboard.submissionRate')}
-          icon={<HiCursorClick className="text-green-600" />}
-          helperText={t('dashboard.visitorsSubmitted')}
-          value={submissionRate?.toLocaleString() + '%' || ''}
-          loading={false}
-          className="gap-4 shadow shadow-green-600"
-        />
-
-        <StatsCard
-          title={t('dashboard.bounceRate')}
-          icon={<TbArrowBounce className="text-red-600" />}
-          helperText={t('dashboard.visitorsLeft')}
-          value={bounceRate?.toLocaleString() + '%' || ''}
-          loading={false}
-          className="gap-4 shadow shadow-red-600"
-        />
-      </div>
-
-      <div className="container mx-auto w-full pt-6">
-        <Separator className="mb-6" />
-        <h2 className="mb-4 text-2xl font-bold">{t('analytics.title')}</h2>
-        <FormAnalyticsCharts
-          data={analytics}
-          fieldLabels={fieldLabels}
-          labels={{
-            avgTimeToComplete: t('analytics.avgTimeToComplete'),
-            avgTimeHelper: t('analytics.avgTimeHelper'),
-            basedOnSubmissions: t('analytics.basedOnSubmissions'),
-            deviceBreakdown: t('analytics.deviceBreakdown'),
-            deviceHelper: t('analytics.deviceHelper'),
-            desktop: t('analytics.desktop'),
-            mobile: t('analytics.mobile'),
-            tablet: t('analytics.tablet'),
-            submissions: t('analytics.submissions'),
-            visits: t('analytics.visits'),
-            submissionTimeline: t('analytics.submissionTimeline'),
-            timelineHelper: t('analytics.timelineHelper'),
-            fieldDropOff: t('analytics.fieldDropOff'),
-            dropOffHelper: t('analytics.dropOffHelper'),
-            dropOffRate: t('analytics.dropOffRate'),
-            fieldErrorRate: t('analytics.fieldErrorRate'),
-            errorRateHelper: t('analytics.errorRateHelper'),
-            errorRate: t('analytics.errorRate'),
-            noData: t('analytics.noData'),
-          }}
-        />
-      </div>
-
-      <div className="container mx-auto w-full pt-10">
-        <Separator className="mb-6" />
-        <SubmissionsTable formId={formId} t={t} />
-      </div>
+      <Tabs defaultValue="submissions">
+        <TabsList className="container mx-auto w-full bg-transparent">
+          <div className="w-full">
+            <TabsTrigger
+              value="submissions"
+              className="text-muted-foreground data-[state=active]:bg-accent rounded-sm transition-all duration-200 data-[state=active]:shadow-sm"
+            >
+              <ClipboardListIcon />
+              {t('dashboard.submissions')}
+            </TabsTrigger>
+            <TabsTrigger
+              value="analytics"
+              className="text-muted-foreground data-[state=active]:bg-accent rounded-sm transition-all duration-200 data-[state=active]:shadow-sm"
+            >
+              <ChartLineIcon />
+              {t('dashboard.analytics')}
+            </TabsTrigger>
+          </div>
+        </TabsList>
+        <TabsContent
+          value="analytics"
+          className="data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:slide-in-from-bottom-2 data-[state=inactive]:animate-out data-[state=inactive]:fade-out-0"
+        >
+          <div className="container mx-auto w-full px-3">
+            <FormAnalytics
+              analytics={analytics}
+              fieldLabels={fieldLabels}
+              visits={visits}
+              submissions={submissions}
+              submissionRate={submissionRate}
+              bounceRate={bounceRate}
+              t={t}
+            />
+          </div>
+        </TabsContent>
+        <TabsContent
+          value="submissions"
+          className="data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:slide-in-from-bottom-2 data-[state=inactive]:animate-out data-[state=inactive]:fade-out-0"
+        >
+          <div className="container mx-auto w-full px-3">
+            <SubmissionsTable formId={formId} t={t} />
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

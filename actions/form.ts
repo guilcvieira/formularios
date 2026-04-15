@@ -239,6 +239,7 @@ export async function GetFormWithSubissions(formId: number) {
   return await prisma.form.findUnique({
     where: {
       id: formId,
+      userId: user.id,
     },
     include: {
       FormSubmission: true,

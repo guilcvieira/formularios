@@ -1,30 +1,6 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { GetFormWithSubissions } from '@actions/form';
-import { formatDistance } from 'date-fns';
 import { ElementType, FormElementInstance } from '@/components/FormElements';
-
-type Row = {
-  [key: string]: string | number | boolean;
-} & {
-  submittedAt: Date;
-};
-
-function RowCell({
-  type: _type,
-  value,
-}: {
-  type: ElementType;
-  value: string | number | boolean;
-}) {
-  return <TableCell>{value}</TableCell>;
-}
+import { SubmissionsDataTable } from './SubmissionsDataTable';
 
 export async function SubmissionsTable({
   formId,
@@ -67,56 +43,34 @@ export async function SubmissionsTable({
     }
   });
 
-  const rows: Row[] = [];
-  form.FormSubmission.forEach((submission) => {
+  const rows = form.FormSubmission.map((submission) => {
     const content = JSON.parse(submission.content);
-    rows.push({
+    return {
       ...content,
-      submittedAt: submission.createdAt,
-    });
+      submittedAt: submission.createdAt.toISOString(),
+    };
   });
 
   return (
     <>
-      <h1>{t('formDetails.submissions')}</h1>
-
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {columns.map((column) => (
-                <TableHead
-                  key={column.id}
-                  className="text-muted-foreground uppercase"
-                >
-                  {column.label}
-                </TableHead>
-              ))}
-              <TableHead className="text-muted-foreground text-right uppercase">
-                {t('formDetails.submittedAt')}
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.map((row, index) => (
-              <TableRow key={index}>
-                {columns.map((column) => (
-                  <RowCell
-                    key={column.id}
-                    type={column.type}
-                    value={row[column.id]}
-                  />
-                ))}
-                <TableCell className="text-muted-foreground text-right">
-                  {formatDistance(row.submittedAt, new Date(), {
-                    addSuffix: true,
-                  })}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <h2 className="text-muted-foreground my-4 text-2xl font-bold">
+        {t('formDetails.submissions')}
+      </h2>
+      <SubmissionsDataTable
+        columns={columns}
+        rows={rows}
+        labels={{
+          search: t('dataTable.search'),
+          noResults: t('dataTable.noResults'),
+          page: t('dataTable.page'),
+          of: t('dataTable.of'),
+          first: t('dataTable.first'),
+          previous: t('dataTable.previous'),
+          next: t('dataTable.next'),
+          last: t('dataTable.last'),
+          submittedAt: t('formDetails.submittedAt'),
+        }}
+      />
     </>
   );
 }

@@ -15,6 +15,8 @@ import {
   ChartTooltipContent,
 } from '@/components/ui/chart';
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
@@ -72,7 +74,6 @@ export function FormAnalyticsCharts({
 }: FormAnalyticsChartsProps) {
   return (
     <div className="flex flex-col gap-6">
-      {/* Top row: Avg Time + Device Breakdown */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <AvgTimeCard
           avgSeconds={data.avgTimeToComplete.avgSeconds}
@@ -82,10 +83,8 @@ export function FormAnalyticsCharts({
         <DeviceBreakdownChart data={data.deviceBreakdown} labels={labels} />
       </div>
 
-      {/* Timeline chart */}
-      <SubmissionTimelineChart data={data.submissionTimeline} labels={labels} />
+      <SubmissionTimeAreaChart data={data.submissionTimeline} labels={labels} />
 
-      {/* Bottom row: Drop-off + Error rates */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <FieldDropOffChart
           data={data.fieldDropOff}
@@ -101,8 +100,6 @@ export function FormAnalyticsCharts({
     </div>
   );
 }
-
-// --- Avg Time to Complete ---
 
 function formatTime(seconds: number): string {
   if (seconds < 60) return `${seconds}s`;
@@ -142,8 +139,6 @@ function AvgTimeCard({
     </Card>
   );
 }
-
-// --- Device Breakdown ---
 
 function DeviceBreakdownChart({
   data,
@@ -229,9 +224,7 @@ function DeviceBreakdownChart({
   );
 }
 
-// --- Submission Timeline ---
-
-function SubmissionTimelineChart({
+function SubmissionTimeAreaChart({
   data,
   labels,
 }: {
@@ -271,39 +264,68 @@ function SubmissionTimelineChart({
           <p className="text-muted-foreground text-sm">{labels.noData}</p>
         ) : (
           <ChartContainer config={chartConfig} className="h-[250px] w-full">
-            <LineChart data={chartData}>
+            <AreaChart data={chartData}>
+              <defs>
+                <linearGradient
+                  id="fillSubmissions"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
+                  <stop
+                    offset="5%"
+                    stopColor="var(--chart-1)"
+                    stopOpacity={0.8}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor="var(--chart-1)"
+                    stopOpacity={0.1}
+                  />
+                </linearGradient>
+                <linearGradient id="fillVisits" x1="0" y1="0" x2="0" y2="1">
+                  <stop
+                    offset="5%"
+                    stopColor="var(--chart-2)"
+                    stopOpacity={0.8}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor="var(--chart-2)"
+                    stopOpacity={0.1}
+                  />
+                </linearGradient>
+              </defs>
+
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="date"
-                tick={{ fontSize: 12 }}
-                interval="preserveStartEnd"
-              />
+              <XAxis dataKey="date" tickLine={true} axisLine={false} />
               <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
               <ChartTooltip content={<ChartTooltipContent />} />
-              <Line
+              <Area
                 type="monotone"
                 dataKey="visits"
-                stroke="var(--color-visits)"
+                stroke="var(--chart-2)"
                 strokeWidth={2}
+                fill="url(#fillVisits)"
                 dot={false}
                 animationEasing="ease-in-out"
               />
-              <Line
+              <Area
                 type="monotone"
                 dataKey="submissions"
-                stroke="var(--color-submissions)"
+                fill="url(#fillSubmissions)"
+                stroke="var(--chart-1)"
                 strokeWidth={2}
                 dot={false}
               />
-            </LineChart>
+            </AreaChart>
           </ChartContainer>
         )}
       </CardContent>
     </Card>
   );
 }
-
-// --- Field Drop-off ---
 
 function FieldDropOffChart({
   data,
@@ -317,7 +339,7 @@ function FieldDropOffChart({
   const chartConfig: ChartConfig = {
     dropOffRate: {
       label: labels.dropOffRate,
-      color: 'hsl(var(--chart-3))',
+      color: 'var(--chart-3)',
     },
   };
 
@@ -367,8 +389,6 @@ function FieldDropOffChart({
   );
 }
 
-// --- Field Error Rates ---
-
 function FieldErrorRatesChart({
   data,
   fieldLabels,
@@ -381,7 +401,7 @@ function FieldErrorRatesChart({
   const chartConfig: ChartConfig = {
     errorRate: {
       label: labels.errorRate,
-      color: 'hsl(var(--chart-4))',
+      color: 'var(--chart-4)',
     },
   };
 
