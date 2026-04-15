@@ -1,4 +1,5 @@
 import { FormAnalyticsCharts } from '@/components/FormAnalyticsCharts';
+import { GetFormAnalytics } from '@actions/analytics';
 import { StatsCard } from '../../../_components/StatsCard';
 import { LuView } from 'react-icons/lu';
 import { FaWpforms } from 'react-icons/fa';
@@ -6,7 +7,7 @@ import { HiCursorClick } from 'react-icons/hi';
 import { TbArrowBounce } from 'react-icons/tb';
 
 interface FormAnalyticsProps {
-  analytics: any;
+  analytics: Awaited<ReturnType<typeof GetFormAnalytics>>;
   fieldLabels: Record<string, string>;
   visits: number;
   submissions: number;
