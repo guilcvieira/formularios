@@ -1,7 +1,11 @@
-'use server';
+'use server'
 
-import prisma from '@/lib/prisma';
-import { currentUser } from '@clerk/nextjs/server';
+import { currentUser } from '@clerk/nextjs/server'
+import { prismaFormRepository } from '@/infra/prisma/form-repository'
+import { trackFormEvent, getFormAnalytics } from '@/use-cases'
+import type { FormSubmission, FormEvent } from '@/domain/entities'
+
+const repo = prismaFormRepository
 
 export async function TrackFormEvent(
   formUrl: string,
@@ -10,48 +14,35 @@ export async function TrackFormEvent(
   fieldId?: string,
   metadata?: string,
 ) {
-  const form = await prisma.form.findFirst({
-    where: { shareUrl: formUrl, published: true },
-    select: { id: true },
-  });
+  const parsedMetadata = metadata ? JSON.parse(metadata) : undefined
 
-  if (!form) return;
-
-  await prisma.formEvent.create({
-    data: {
-      formId: form.id,
-      sessionId,
-      type,
-      fieldId: fieldId ?? null,
-      metadata: metadata ?? null,
-    },
-  });
+  await trackFormEvent(repo, {
+    formUrl,
+    sessionId,
+    type,
+    fieldId,
+    metadata: parsedMetadata,
+  })
 }
 
 export async function GetFormAnalytics(formId: number) {
-  const user = await currentUser();
-  if (!user) throw new Error('User not authenticated');
+  const user = await currentUser()
+  if (!user) throw new Error('User not authenticated')
 
-  const form = await prisma.form.findUnique({
-    where: { id: formId, userId: user.id },
-    select: { id: true, visits: true, submissions: true },
-  });
+  const result = await getFormAnalytics(repo, { formId, userId: user.id })
 
-  if (!form) throw new Error('Form not found');
+  if (!result.success) throw new Error(result.error)
 
-  const [
-    avgTime,
-    deviceBreakdown,
-    fieldDropOff,
-    fieldErrors,
-    submissionTimeline,
-  ] = await Promise.all([
-    getAvgTimeToComplete(formId),
-    getDeviceBreakdown(formId),
-    getFieldDropOff(formId),
-    getFieldErrorRates(formId),
-    getSubmissionTimeline(formId),
-  ]);
+  const { submissions, events, totalVisits, totalSubmissions } = result.data
+
+  const [avgTime, deviceBreakdown, fieldDropOff, fieldErrors, submissionTimeline] =
+    await Promise.all([
+      computeAvgTimeToComplete(submissions),
+      computeDeviceBreakdown(submissions),
+      computeFieldDropOff(events),
+      computeFieldErrorRates(events, totalSubmissions),
+      computeSubmissionTimeline(submissions, events),
+    ])
 
   return {
     avgTimeToComplete: avgTime,
@@ -59,174 +50,112 @@ export async function GetFormAnalytics(formId: number) {
     fieldDropOff,
     fieldErrors,
     submissionTimeline,
-  };
+  }
 }
 
-// Avg time to complete (in seconds)
-async function getAvgTimeToComplete(formId: number) {
-  const result = await prisma.formSubmission.aggregate({
-    where: {
-      formId,
-      timeToComplete: { not: null },
-    },
-    _avg: { timeToComplete: true },
-    _count: { timeToComplete: true },
-  });
+function computeAvgTimeToComplete(submissions: FormSubmission[]) {
+  const withTime = submissions.filter((s) => s.timeToComplete !== null)
+  const totalTime = withTime.reduce((sum, s) => sum + (s.timeToComplete ?? 0), 0)
 
   return {
-    avgSeconds: Math.round(result._avg.timeToComplete ?? 0),
-    sampleSize: result._count.timeToComplete,
-  };
+    avgSeconds: withTime.length > 0 ? Math.round(totalTime / withTime.length) : 0,
+    sampleSize: withTime.length,
+  }
 }
 
-// Device breakdown from submissions
-async function getDeviceBreakdown(formId: number) {
-  const submissions = await prisma.formSubmission.groupBy({
-    by: ['device'],
-    where: { formId },
-    _count: { id: true },
-  });
+function computeDeviceBreakdown(submissions: FormSubmission[]) {
+  const deviceMap = new Map<string, number>()
 
-  const total = submissions.reduce((sum, s) => sum + s._count.id, 0);
-
-  return submissions.map((s) => ({
-    device: s.device,
-    count: s._count.id,
-    percentage: total > 0 ? Math.round((s._count.id / total) * 100) : 0,
-  }));
-}
-
-// Field drop-off: count unique sessions that interacted with each field
-// vs sessions that started the form
-async function getFieldDropOff(formId: number) {
-  const totalStarts = await prisma.formEvent.groupBy({
-    by: ['sessionId'],
-    where: { formId, type: 'form_start' },
-  });
-
-  const totalStartCount = totalStarts.length;
-
-  if (totalStartCount === 0) return [];
-
-  const fieldInteractions = await prisma.formEvent.groupBy({
-    by: ['fieldId'],
-    where: {
-      formId,
-      type: 'field_interaction',
-      fieldId: { not: null },
-    },
-    _count: { _all: true },
-  });
-
-  // Count unique sessions per field
-  const fieldSessionCounts: { fieldId: string; sessions: number }[] = [];
-
-  for (const field of fieldInteractions) {
-    if (!field.fieldId) continue;
-
-    const uniqueSessions = await prisma.formEvent.groupBy({
-      by: ['sessionId'],
-      where: {
-        formId,
-        type: 'field_interaction',
-        fieldId: field.fieldId,
-      },
-    });
-
-    fieldSessionCounts.push({
-      fieldId: field.fieldId,
-      sessions: uniqueSessions.length,
-    });
+  for (const sub of submissions) {
+    const count = deviceMap.get(sub.device) ?? 0
+    deviceMap.set(sub.device, count + 1)
   }
 
-  return fieldSessionCounts.map((f) => ({
-    fieldId: f.fieldId,
-    interacted: f.sessions,
+  const total = submissions.length
+
+  return Array.from(deviceMap.entries()).map(([device, count]) => ({
+    device,
+    count,
+    percentage: total > 0 ? Math.round((count / total) * 100) : 0,
+  }))
+}
+
+function computeFieldDropOff(events: FormEvent[]) {
+  const startSessions = new Set(
+    events.filter((e) => e.type === 'form_start').map((e) => e.sessionId),
+  )
+
+  const totalStartCount = startSessions.size
+  if (totalStartCount === 0) return []
+
+  const fieldSessions = new Map<string, Set<string>>()
+
+  for (const event of events) {
+    if (event.type === 'field_interaction' && event.fieldId) {
+      if (!fieldSessions.has(event.fieldId)) {
+        fieldSessions.set(event.fieldId, new Set())
+      }
+      fieldSessions.get(event.fieldId)!.add(event.sessionId)
+    }
+  }
+
+  return Array.from(fieldSessions.entries()).map(([fieldId, sessions]) => ({
+    fieldId,
+    interacted: sessions.size,
     totalStarts: totalStartCount,
-    dropOffRate: Math.round(
-      ((totalStartCount - f.sessions) / totalStartCount) * 100,
-    ),
-  }));
+    dropOffRate: Math.round(((totalStartCount - sessions.size) / totalStartCount) * 100),
+  }))
 }
 
-// Field error rates
-async function getFieldErrorRates(formId: number) {
-  const errors = await prisma.formEvent.groupBy({
-    by: ['fieldId'],
-    where: {
-      formId,
-      type: 'field_error',
-      fieldId: { not: null },
-    },
-    _count: { _all: true },
-  });
+function computeFieldErrorRates(events: FormEvent[], totalSubmissions: number) {
+  const errorCounts = new Map<string, number>()
 
-  const totalSubmissions = await prisma.formSubmission.count({
-    where: { formId },
-  });
-
-  return errors
-    .filter((e) => e.fieldId !== null)
-    .map((e) => ({
-      fieldId: e.fieldId!,
-      errorCount: e._count._all,
-      errorRate:
-        totalSubmissions > 0
-          ? Math.round((e._count._all / totalSubmissions) * 100)
-          : 0,
-    }));
-}
-
-// Submission timeline (grouped by day for the last 30 days)
-async function getSubmissionTimeline(formId: number) {
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-  const submissions = await prisma.formSubmission.findMany({
-    where: {
-      formId,
-      createdAt: { gte: thirtyDaysAgo },
-    },
-    select: { createdAt: true },
-    orderBy: { createdAt: 'asc' },
-  });
-
-  const visits = await prisma.formEvent.findMany({
-    where: {
-      formId,
-      type: 'form_start',
-      createdAt: { gte: thirtyDaysAgo },
-    },
-    select: { createdAt: true },
-    orderBy: { createdAt: 'asc' },
-  });
-
-  // Group by date
-  const dailyMap = new Map<string, { submissions: number; visits: number }>();
-
-  // Initialize all 30 days
-  for (let i = 0; i < 30; i++) {
-    const date = new Date();
-    date.setDate(date.getDate() - (29 - i));
-    const key = date.toISOString().split('T')[0];
-    dailyMap.set(key, { submissions: 0, visits: 0 });
+  for (const event of events) {
+    if (event.type === 'field_error' && event.fieldId) {
+      const count = errorCounts.get(event.fieldId) ?? 0
+      errorCounts.set(event.fieldId, count + 1)
+    }
   }
 
-  submissions.forEach((s) => {
-    const key = s.createdAt.toISOString().split('T')[0];
-    const entry = dailyMap.get(key);
-    if (entry) entry.submissions++;
-  });
+  return Array.from(errorCounts.entries()).map(([fieldId, errorCount]) => ({
+    fieldId,
+    errorCount,
+    errorRate: totalSubmissions > 0 ? Math.round((errorCount / totalSubmissions) * 100) : 0,
+  }))
+}
 
-  visits.forEach((v) => {
-    const key = v.createdAt.toISOString().split('T')[0];
-    const entry = dailyMap.get(key);
-    if (entry) entry.visits++;
-  });
+function computeSubmissionTimeline(submissions: FormSubmission[], events: FormEvent[]) {
+  const thirtyDaysAgo = new Date()
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+  const dailyMap = new Map<string, { submissions: number; visits: number }>()
+
+  for (let i = 0; i < 30; i++) {
+    const date = new Date()
+    date.setDate(date.getDate() - (29 - i))
+    const key = date.toISOString().split('T')[0]
+    dailyMap.set(key, { submissions: 0, visits: 0 })
+  }
+
+  for (const sub of submissions) {
+    if (sub.createdAt >= thirtyDaysAgo) {
+      const key = sub.createdAt.toISOString().split('T')[0]
+      const entry = dailyMap.get(key)
+      if (entry) entry.submissions++
+    }
+  }
+
+  for (const event of events) {
+    if (event.type === 'form_start' && event.createdAt >= thirtyDaysAgo) {
+      const key = event.createdAt.toISOString().split('T')[0]
+      const entry = dailyMap.get(key)
+      if (entry) entry.visits++
+    }
+  }
 
   return Array.from(dailyMap.entries()).map(([date, data]) => ({
     date,
     submissions: data.submissions,
     visits: data.visits,
-  }));
+  }))
 }

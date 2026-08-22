@@ -46,7 +46,6 @@ export default function FormBuilder({ form }: { form: Form }) {
   const sensors = useSensors(mouseSensor, touchSensor);
 
   useEffect(() => {
-    console.log('FormBuilder useEffect', form);
     const elements = JSON.parse(form.content) as FormElementInstance[];
     setElements(elements);
     setIsReady(true);

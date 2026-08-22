@@ -1,193 +1,116 @@
-'use server';
+'use server'
 
-import prisma from '@/lib/prisma';
-import { formSchema, FormSchema } from '@/schemas/form.schema';
-import { currentUser } from '@clerk/nextjs/server';
+import { currentUser } from '@clerk/nextjs/server'
+import { prismaFormRepository } from '@/infra/prisma/form-repository'
+import {
+  createForm,
+  getForms,
+  getFormById,
+  getFormStats,
+  updateFormContent,
+  publishForm,
+  getFormContentByUrl,
+  submitForm,
+} from '@/use-cases'
+import { dispatchWebhook } from '@/infra/webhook/flow-webhook-client'
 
-class UserNotFoundErr extends Error {}
+const repo = prismaFormRepository
 
 export async function GetFormStats() {
-  const user = await currentUser();
+  const user = await currentUser()
+  if (!user) throw new Error('User not found')
 
-  if (!user) {
-    return {
-      throw: new UserNotFoundErr(),
-    };
-  }
+  const result = await getFormStats(repo, { userId: user.id })
 
-  const stats = await prisma.form.aggregate({
-    where: {
-      userId: user.id,
-    },
-    _sum: {
-      visits: true,
-      submissions: true,
-    },
-  });
+  if (!result.success) throw new Error(result.error)
 
-  const visits = stats._sum.visits || 0;
-  const submissions = stats._sum.submissions || 0;
+  const { visits, submissions, submissionRate, bounceRate } = result.data
 
-  let submissionRate = 0;
-
-  if (visits > 0) {
-    submissionRate = (submissions / visits) * 100;
-  }
-
-  const bounceRate = 100 - submissionRate;
   return {
     visits,
     submissions,
     submissionRate: submissionRate.toFixed(2),
     bounceRate: bounceRate.toFixed(2),
-  };
+  }
 }
 
-export async function CreateForm(data: FormSchema) {
-  const validation = formSchema.safeParse(data);
-  if (!validation.success) {
-    throw new Error('Invalid form data');
-  }
+export async function CreateForm(data: { name: string; description?: string }) {
+  const user = await currentUser()
+  if (!user) throw new Error('User not found')
 
-  const user = await currentUser();
+  const result = await createForm(repo, {
+    userId: user.id,
+    name: data.name,
+    description: data.description ?? '',
+  })
 
-  if (!user) {
-    throw new Error('User not authenticated');
-  }
-
-  const { name, description } = data;
-
-  const form = await prisma.form.create({
-    data: {
-      userId: user.id,
-      name,
-      description,
-    },
-  });
-
-  if (!form) {
-    throw new Error('Failed to create form');
-  }
-
-  return form.id;
+  if (!result.success) throw new Error(result.error)
+  return result.data.id
 }
 
 export async function GetForms() {
-  const user = await currentUser();
+  const user = await currentUser()
+  if (!user) throw new Error('User not found')
 
-  if (!user) {
-    throw new UserNotFoundErr();
-  }
+  const result = await getForms(repo, { userId: user.id })
 
-  const forms = await prisma.form.findMany({
-    where: {
-      userId: user.id,
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
+  if (!result.success) throw new Error(result.error)
 
-  return forms;
+  return result.data.map((form) => ({
+    ...form,
+    content: JSON.stringify(form.content),
+  }))
 }
 
 export async function GetFormById(id: number) {
-  const user = await currentUser();
+  const user = await currentUser()
+  if (!user) throw new Error('User not found')
 
-  if (!user) {
-    throw new UserNotFoundErr();
+  const result = await getFormById(repo, { formId: id, userId: user.id })
+
+  if (!result.success) return null
+
+  return {
+    ...result.data,
+    content: JSON.stringify(result.data.content),
   }
-
-  return await prisma.form.findUnique({
-    where: {
-      id,
-      userId: user.id,
-    },
-  });
 }
 
 export async function GetFormContentByURL(formUrl: string) {
-  if (!formUrl) {
-    throw new Error('Form URL is required');
-  }
+  const result = await getFormContentByUrl(repo, { formUrl })
 
-  const form = await prisma.form.findFirst({
-    where: {
-      shareUrl: formUrl,
-    },
-    select: {
-      id: true,
-      content: true,
-    },
-  });
-
-  if (!form) {
-    throw new Error('Form not found');
-  }
-
-  await prisma.form.update({
-    data: {
-      visits: {
-        increment: 1,
-      },
-    },
-    where: {
-      id: form.id,
-    },
-  });
+  if (!result.success) throw new Error(result.error)
 
   return {
-    id: form.id,
-    content: form.content,
-  };
+    id: result.data.id,
+    content: JSON.stringify(result.data.content),
+  }
 }
 
 export async function UpdateFormContent(id: number, jsonContent: string) {
-  const user = await currentUser();
+  const user = await currentUser()
+  if (!user) throw new Error('User not found')
 
-  if (!user) {
-    throw new UserNotFoundErr();
-  }
+  const content = JSON.parse(jsonContent)
 
-  const form = await prisma.form.update({
-    where: {
-      id,
-      userId: user.id,
-    },
-    data: {
-      content: jsonContent,
-    },
-  });
+  const result = await updateFormContent(repo, {
+    formId: id,
+    userId: user.id,
+    content,
+  })
 
-  if (!form) {
-    throw new Error('Failed to update form content');
-  }
-
-  return form;
+  if (!result.success) throw new Error(result.error)
 }
 
 export async function PublishForm(id: number) {
-  const user = await currentUser();
+  const user = await currentUser()
+  if (!user) throw new Error('User not found')
 
-  if (!user) {
-    throw new UserNotFoundErr();
-  }
+  const result = await publishForm(repo, { formId: id, userId: user.id })
 
-  const form = await prisma.form.update({
-    where: {
-      id,
-      userId: user.id,
-    },
-    data: {
-      published: true,
-    },
-  });
+  if (!result.success) throw new Error(result.error)
 
-  if (!form) {
-    throw new Error('Failed to publish form');
-  }
-
-  return form;
+  void dispatchWebhook('form.published', { formId: id, userId: user.id })
 }
 
 export async function SubmitFunction(
@@ -196,53 +119,39 @@ export async function SubmitFunction(
   timeToComplete?: number,
   device?: string,
 ) {
-  const form = await prisma.form.findFirst({
-    where: {
-      shareUrl: formUrl,
-      published: true,
-    },
-    select: {
-      id: true,
-    },
-  });
+  const parsedContent = JSON.parse(content) as Record<string, string>
 
-  if (!form) {
-    throw new Error('Form not found or not published');
-  }
+  const result = await submitForm(repo, {
+    formUrl,
+    content: parsedContent,
+    timeToComplete,
+    device,
+  })
 
-  return await prisma.form.update({
-    data: {
-      submissions: {
-        increment: 1,
-      },
-      FormSubmission: {
-        create: {
-          content,
-          timeToComplete: timeToComplete ?? null,
-          device: device ?? 'unknown',
-        },
-      },
-    },
-    where: {
-      id: form.id,
-    },
-  });
+  if (!result.success) throw new Error(result.error)
+
+  void dispatchWebhook('form.submission', {
+    formId: result.data.formId,
+    submissionId: result.data.id,
+  })
 }
 
 export async function GetFormWithSubissions(formId: number) {
-  const user = await currentUser();
+  const user = await currentUser()
+  if (!user) throw new Error('User not found')
 
-  if (!user) {
-    throw new UserNotFoundErr();
+  const data = await repo.getFormWithSubmissions(formId)
+
+  if (!data) return null
+
+  if (data.userId !== user.id) throw new Error('Form not found')
+
+  return {
+    ...data,
+    content: JSON.stringify(data.content),
+    FormSubmission: data.formSubmissions.map((sub) => ({
+      ...sub,
+      content: JSON.stringify(sub.content),
+    })),
   }
-
-  return await prisma.form.findUnique({
-    where: {
-      id: formId,
-      userId: user.id,
-    },
-    include: {
-      FormSubmission: true,
-    },
-  });
 }

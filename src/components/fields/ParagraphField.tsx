@@ -50,14 +50,6 @@ export const ParagraphFieldFormElement: FormElement = {
   ): boolean {
     const element = formElement as CustomInstance;
     if (element.extraAttributes.required) {
-      console.log(
-        'Validating required field:',
-        element.extraAttributes.label,
-        'Value:',
-        currentValue,
-        'Valid:',
-        !!(currentValue && currentValue.trim().length > 0),
-      );
       return !!(currentValue && currentValue.trim().length > 0);
     }
     return true;

@@ -60,8 +60,6 @@ export default function PublishFormBtn({ id }: { id: number }) {
             className="bg-primary text-primary-foreground hover:bg-primary/90"
             onClick={(e) => {
               e.preventDefault();
-              // Add your publish logic here
-              console.log('Form published');
               startTransition(publishForm);
             }}
           >

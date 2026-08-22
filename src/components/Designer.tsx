@@ -94,8 +94,6 @@ export default function Designer() {
         const activeId = active.data.current?.elementId;
         const overId = over.data.current?.elementId;
 
-        console.log('DEBUG: activeId', activeId);
-        console.log('DEBUG: overId', overId);
 
         const activeElementIndex = elements.findIndex(
           (el) => el.id === activeId,
