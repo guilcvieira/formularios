@@ -12,7 +12,7 @@ import {
   getFormContentByUrl,
   submitForm,
 } from '@/use-cases'
-import { dispatchWebhook } from '@/infra/webhook/flow-webhook-client'
+import { dispatchFlowEvent } from '@/infra/events/flow-events-client'
 
 const repo = prismaFormRepository
 
@@ -110,7 +110,14 @@ export async function PublishForm(id: number) {
 
   if (!result.success) throw new Error(result.error)
 
-  void dispatchWebhook('form.published', { formId: id, userId: user.id })
+  const form = await repo.findById(id)
+  if (form) {
+    void dispatchFlowEvent('form.published', {
+      formId: form.id,
+      formName: form.name,
+      shareUrl: form.shareUrl,
+    })
+  }
 }
 
 export async function SubmitFunction(
@@ -130,9 +137,13 @@ export async function SubmitFunction(
 
   if (!result.success) throw new Error(result.error)
 
-  void dispatchWebhook('form.submission', {
+  const form = await repo.findByShareUrl(formUrl)
+
+  void dispatchFlowEvent('form.submitted', {
     formId: result.data.formId,
+    formName: form?.name ?? '',
     submissionId: result.data.id,
+    content: parsedContent,
   })
 }
 
