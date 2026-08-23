@@ -139,11 +139,30 @@ export async function SubmitFunction(
 
   const form = await repo.findByShareUrl(formUrl)
 
+  // Map field IDs to labels for readable event payload
+  const labeledContent: Record<string, string> = {}
+  if (form) {
+    const elements = JSON.parse(typeof form.content === 'string' ? form.content : JSON.stringify(form.content)) as Array<{
+      id: string
+      type: string
+      extraAttributes?: { label?: string }
+    }>
+    const idToLabel = new Map(
+      elements
+        .filter(el => el.extraAttributes?.label)
+        .map(el => [el.id, el.extraAttributes!.label!.trim()])
+    )
+    for (const [fieldId, value] of Object.entries(parsedContent)) {
+      const label = idToLabel.get(fieldId) ?? fieldId
+      labeledContent[label] = value
+    }
+  }
+
   void dispatchFlowEvent('form.submitted', {
     formId: result.data.formId,
     formName: form?.name ?? '',
     submissionId: result.data.id,
-    content: parsedContent,
+    content: labeledContent,
   })
 }
 

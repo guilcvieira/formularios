@@ -12,7 +12,12 @@ export async function dispatchFlowEvent(event: string, data: Record<string, unkn
   const url = process.env.FLOW_EVENTS_API_URL
   const token = process.env.FLOW_API_TOKEN
 
-  if (!url || !token) return // Not configured, skip silently
+  console.log(`[flow-events] Attempting dispatch: event=${event}, url=${url ? 'set' : 'MISSING'}, token=${token ? 'set' : 'MISSING'}`)
+
+  if (!url || !token) {
+    console.warn(`[flow-events] Skipping dispatch: FLOW_EVENTS_API_URL=${url ? 'set' : 'undefined'}, FLOW_API_TOKEN=${token ? 'set' : 'undefined'}`)
+    return
+  }
 
   const payload: EventPayload = {
     event,
@@ -21,7 +26,7 @@ export async function dispatchFlowEvent(event: string, data: Record<string, unkn
   }
 
   try {
-    await fetch(url, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -30,7 +35,8 @@ export async function dispatchFlowEvent(event: string, data: Record<string, unkn
       body: JSON.stringify(payload),
       signal: AbortSignal.timeout(5000),
     })
-  } catch {
-    console.error(`[flow-events] Failed to dispatch event: ${event}`)
+    console.log(`[flow-events] Dispatched ${event}: status=${response.status}`)
+  } catch (error) {
+    console.error(`[flow-events] Failed to dispatch event: ${event}`, error)
   }
 }
